@@ -1,7 +1,7 @@
 import { useLanguage } from '../contexts/LanguageContext';
 
 const Footer = () => {
-  const { language } = useLanguage();
+  useLanguage();
 
   return (
     <footer className="bg-gray-900 text-white pt-16 pb-8 border-t-[4px] border-primary">
