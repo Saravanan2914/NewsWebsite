@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Search, Moon, Sun, Menu, UserCircle, Globe, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Search, Moon, Sun, Menu, UserCircle, X } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const CATEGORIES = [
@@ -14,8 +14,8 @@ const Navbar = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const { language, toggleLanguage, t } = useLanguage();
-  const navigate = useNavigate();
+  const { language, setLanguage, t } = useLanguage();
+
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -44,9 +44,12 @@ const Navbar = () => {
           <Link to="/admin/login" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
             <UserCircle size={24} />
           </Link>
-          <span className="hidden md:inline text-sm text-gray-500 dark:text-gray-400 font-medium">
-            {currentTime.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-          </span>
+          <div className="hidden md:flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 font-medium">
+            <span>{currentTime.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+            <span className="font-mono font-bold bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-primary dark:text-white tracking-widest">
+              {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </span>
+          </div>
         </div>
         
         {!isSearchOpen ? (
@@ -71,9 +74,15 @@ const Navbar = () => {
         )}
         
         <div className="flex items-center space-x-3 md:space-x-4 z-10">
-          <button onClick={toggleLanguage} className="flex items-center text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-            <Globe size={16} className="mr-1" /> {language}
-          </button>
+          <div className="flex items-center text-sm font-bold bg-gray-100 dark:bg-gray-800 rounded p-0.5">
+            <button onClick={() => setLanguage('TA')} className={`px-2 py-1 rounded transition-colors ${language === 'TA' ? 'bg-primary text-white' : 'text-gray-600 dark:text-gray-300 hover:text-primary'}`}>
+              தமிழ்
+            </button>
+            <span className="text-gray-400 dark:text-gray-500 text-xs">|</span>
+            <button onClick={() => setLanguage('EN')} className={`px-2 py-1 rounded transition-colors ${language === 'EN' ? 'bg-primary text-white' : 'text-gray-600 dark:text-gray-300 hover:text-primary'}`}>
+              English
+            </button>
+          </div>
           <button onClick={() => setIsSearchOpen(!isSearchOpen)} className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors hidden md:block">
             <Search size={20} />
           </button>

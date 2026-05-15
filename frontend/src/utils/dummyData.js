@@ -2,10 +2,13 @@ export const MOCK_NEWS = [
   {
     id: 1,
     title: "Government Announces New Scheme for Students in Tamil Nadu",
+    title_ta: "தமிழக மாணவர்களுக்காக புதிய திட்டத்தை அறிவித்தது அரசு",
     description: "The state government has launched a new scholarship scheme aimed at helping students from economically weaker sections to pursue higher education without financial hurdles.",
+    description_ta: "பொருளாதாரத்தில் பின்தங்கிய மாணவர்கள் நிதித் தடையின்றி உயர்கல்வி தொடர உதவும் நோக்கில் மாநில அரசு புதிய உதவித்தொகை திட்டத்தை தொடங்கியுள்ளது.",
     category: "Tamil Nadu",
     imageUrl: "https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&q=80&w=800",
     uploadTime: "2 hours ago",
+    uploadTime_ta: "2 மணி நேரத்திற்கு முன்",
     views: "1.2k",
     isBreaking: true,
     isVideo: false
@@ -13,10 +16,13 @@ export const MOCK_NEWS = [
   {
     id: 2,
     title: "ISRO Successfully Launches Next-Gen Communication Satellite",
+    title_ta: "இஸ்ரோ அடுத்த தலைமுறை தகவல் தொடர்பு செயற்கைக்கோளை வெற்றிகரமாக விண்ணில் செலுத்தியது",
     description: "In a major milestone, ISRO's latest heavy-lift vehicle successfully placed the advanced communication satellite into its intended orbit.",
+    description_ta: "ஒரு முக்கிய மைல்கல்லாக, இஸ்ரோவின் சமீபத்திய கனரக ஏவுகணை மேம்பட்ட தகவல் தொடர்பு செயற்கைக்கோளை அதன் திட்டமிடப்பட்ட சுற்றுப்பாதையில் வெற்றிகரமாக நிலைநிறுத்தியது.",
     category: "Technology",
     imageUrl: "https://images.unsplash.com/photo-1541185933-ef5d8ed016c2?auto=format&fit=crop&q=80&w=800",
     uploadTime: "4 hours ago",
+    uploadTime_ta: "4 மணி நேரத்திற்கு முன்",
     views: "3.5k",
     isBreaking: true,
     isVideo: true
@@ -24,10 +30,13 @@ export const MOCK_NEWS = [
   {
     id: 3,
     title: "Major Shake-up in Upcoming Assembly Elections Strategy",
+    title_ta: "வரவிருக்கும் சட்டமன்ற தேர்தல் வியூகத்தில் பெரும் மாற்றம்",
     description: "Top political leaders met today to discuss the coalition strategy ahead of the upcoming assembly elections, signaling potential major shifts.",
+    description_ta: "வரவிருக்கும் சட்டமன்ற தேர்தலுக்கு முன்னதாக கூட்டணி வியூகம் குறித்து விவாதிக்க உயர்மட்ட அரசியல் தலைவர்கள் இன்று சந்தித்தனர், இது சாத்தியமான பெரிய மாற்றங்களை குறிக்கிறது.",
     category: "Politics",
     imageUrl: "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&q=80&w=800",
     uploadTime: "5 hours ago",
+    uploadTime_ta: "5 மணி நேரத்திற்கு முன்",
     views: "850",
     isBreaking: false,
     isVideo: false
@@ -35,10 +44,13 @@ export const MOCK_NEWS = [
   {
     id: 4,
     title: "Blockbuster Movie Breaks Box Office Records on Day 1",
+    title_ta: "பிளாக்பஸ்டர் திரைப்படம் முதல் நாளில் பாக்ஸ் ஆபிஸ் சாதனைகளை முறியடித்தது",
     description: "The highly anticipated movie has shattered previous opening day collection records across the state.",
+    description_ta: "மிகவும் எதிர்பார்க்கப்பட்ட இப்படம் மாநிலம் முழுவதும் முந்தைய தொடக்க நாள் வசூல் சாதனைகளை முறியடித்துள்ளது.",
     category: "Cinema",
     imageUrl: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&q=80&w=800",
     uploadTime: "6 hours ago",
+    uploadTime_ta: "6 மணி நேரத்திற்கு முன்",
     views: "15k",
     isBreaking: false,
     isVideo: true
@@ -46,10 +58,13 @@ export const MOCK_NEWS = [
   {
     id: 5,
     title: "Indian Cricket Team Wins Thrilling Match by 2 Wickets",
+    title_ta: "பரபரப்பான போட்டியில் இந்திய கிரிக்கெட் அணி 2 விக்கெட் வித்தியாசத்தில் வெற்றி",
     description: "In a nail-biting finish, the Indian team secured a victory in the final over against their rivals.",
+    description_ta: "நகம் கடிக்கும் இறுதிக்கட்டத்தில், இந்திய அணி தங்களது போட்டியாளர்களுக்கு எதிரான இறுதி ஓவரில் வெற்றியைப் பெற்றது.",
     category: "Sports",
     imageUrl: "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&q=80&w=800",
     uploadTime: "8 hours ago",
+    uploadTime_ta: "8 மணி நேரத்திற்கு முன்",
     views: "12k",
     isBreaking: false,
     isVideo: false

@@ -6,7 +6,7 @@ const Home = () => {
   const newsItems = useSelector((state) => state.news.items);
   const breakingNews = newsItems.filter(news => news.isBreaking);
   const otherNews = newsItems.filter(news => !news.isBreaking);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   return (
     <div className="space-y-10">
@@ -52,19 +52,22 @@ const Home = () => {
           <h2 className="text-2xl font-bold">{t('videoNews')}</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {newsItems.filter(n => n.isVideo).map(news => (
-            <div key={news.id} className="group cursor-pointer">
-              <div className="relative h-48 rounded-lg overflow-hidden mb-3">
-                <img src={news.imageUrl} alt={news.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/20 transition-colors">
-                  <div className="w-12 h-12 rounded-full bg-primary/90 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"></path></svg>
+          {newsItems.filter(n => n.isVideo).map(news => {
+            const displayTitle = language === 'TA' && news.title_ta ? news.title_ta : news.title;
+            return (
+              <div key={news.id} className="group cursor-pointer">
+                <div className="relative h-48 rounded-lg overflow-hidden mb-3">
+                  <img src={news.imageUrl} alt={displayTitle} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/20 transition-colors">
+                    <div className="w-12 h-12 rounded-full bg-primary/90 flex items-center justify-center">
+                      <svg className="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"></path></svg>
+                    </div>
                   </div>
                 </div>
+                <h3 className="font-semibold line-clamp-2 group-hover:text-primary transition-colors">{displayTitle}</h3>
               </div>
-              <h3 className="font-semibold line-clamp-2 group-hover:text-primary transition-colors">{news.title}</h3>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
     </div>

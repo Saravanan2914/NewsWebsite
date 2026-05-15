@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { UploadCloud, Image as ImageIcon, LayoutDashboard, FileText, Settings, LogOut } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { UploadCloud, Image as ImageIcon, LayoutDashboard, FileText, LogOut } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { addNews } from '../redux/newsSlice';
+import { translateText } from '../utils/translator';
 
 const CATEGORIES = ["Tamil Nadu", "India", "World", "Politics", "Cinema", "Sports", "Technology"];
 
@@ -13,10 +14,10 @@ const Dashboard = () => {
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
   const [isBreaking, setIsBreaking] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [mediaFile, setMediaFile] = useState(null);
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const newsItems = useSelector(state => state.news.items);
 
   const handleDragOver = (e) => {
@@ -43,41 +44,60 @@ const Dashboard = () => {
     }
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (!title || !category || !description) return alert('Fill required fields');
     
-    // In a real app, upload mediaFile to Cloudinary here
-    // For demo, we use placeholder URL or a local object URL if it's an image
-    let mediaUrl = "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&q=80&w=800";
-    let isVideo = false;
-    
-    if (mediaFile) {
-      mediaUrl = URL.createObjectURL(mediaFile);
-      isVideo = mediaFile.type.startsWith('video/');
-    }
-    
-    const newArticle = {
-      id: Date.now(),
-      title,
-      category,
-      description,
-      content,
-      isBreaking,
-      imageUrl: mediaUrl,
-      uploadTime: "Just now",
-      views: "0",
-      isVideo: isVideo
-    };
+    setIsTranslating(true);
+    try {
+      // In a real app, upload mediaFile to Cloudinary here
+      let mediaUrl = "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&q=80&w=800";
+      let isVideo = false;
+      
+      if (mediaFile) {
+        mediaUrl = URL.createObjectURL(mediaFile);
+        isVideo = mediaFile.type.startsWith('video/');
+      }
 
-    dispatch(addNews(newArticle));
-    alert('News Published Successfully!');
-    
-    setTitle('');
-    setCategory('');
-    setDescription('');
-    setContent('');
-    setIsBreaking(false);
-    setMediaFile(null);
+      // Automatically translate inputs to English and Tamil
+      const title_en = await translateText(title, 'en');
+      const title_ta = await translateText(title, 'ta');
+      const description_en = await translateText(description, 'en');
+      const description_ta = await translateText(description, 'ta');
+      const content_en = await translateText(content, 'en');
+      const content_ta = await translateText(content, 'ta');
+      
+      const newArticle = {
+        id: Date.now(),
+        title: title_en,
+        title_ta,
+        category,
+        description: description_en,
+        description_ta,
+        content: content_en,
+        content_ta,
+        isBreaking,
+        imageUrl: mediaUrl,
+        uploadTime: "Just now",
+        uploadTime_ta: "இப்போது",
+        views: "0",
+        isVideo: isVideo
+      };
+
+      dispatch(addNews(newArticle));
+      alert('News Published Successfully!');
+      
+      setTitle('');
+      setCategory('');
+      setDescription('');
+      setContent('');
+      setIsBreaking(false);
+      setMediaFile(null);
+    } catch (error) {
+      console.error(error);
+      alert('Error publishing news');
+    } finally {
+      setIsTranslating(false);
+    }
   };
 
   return (
@@ -187,8 +207,8 @@ const Dashboard = () => {
                 <button type="button" className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                   Preview
                 </button>
-                <button type="button" onClick={handlePublish} className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark transition-colors shadow-md">
-                  Publish Article
+                <button type="button" onClick={handlePublish} disabled={isTranslating} className={`px-6 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark transition-colors shadow-md flex items-center ${isTranslating ? 'opacity-70 cursor-not-allowed' : ''}`}>
+                  {isTranslating ? 'Translating & Publishing...' : 'Publish Article'}
                 </button>
               </div>
             </form>

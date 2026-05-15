@@ -2,8 +2,11 @@ const mongoose = require('mongoose');
 
 const newsSchema = new mongoose.Schema({
   title: { type: String, required: true },
+  title_ta: { type: String },
   description: { type: String, required: true },
+  description_ta: { type: String },
   content: { type: String, required: true },
+  content_ta: { type: String },
   category: { type: String, required: true },
   tags: [String],
   imageUrl: { type: String },

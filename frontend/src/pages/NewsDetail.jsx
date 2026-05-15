@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { Clock, Eye, Share2, Link as LinkIcon } from 'lucide-react';
+import { Clock, Eye, Link as LinkIcon } from 'lucide-react';
 import NewsCard from '../components/NewsCard';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -9,9 +9,14 @@ const NewsDetail = () => {
   const newsItems = useSelector((state) => state.news.items);
   const news = newsItems.find(n => n.id === parseInt(id));
   const relatedNews = newsItems.filter(n => n.category === news?.category && n.id !== news?.id).slice(0, 3);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   if (!news) return <div className="text-center py-20">News not found</div>;
+
+  const displayTitle = language === 'TA' && news.title_ta ? news.title_ta : news.title;
+  const displayDescription = language === 'TA' && news.description_ta ? news.description_ta : news.description;
+  const displayUploadTime = language === 'TA' && news.uploadTime_ta ? news.uploadTime_ta : news.uploadTime;
+  const displayContent = language === 'TA' && news.content_ta ? news.content_ta : news.content;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -21,12 +26,12 @@ const NewsDetail = () => {
           {news.category}
         </span>
         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4 leading-tight">
-          {news.title}
+          {displayTitle}
         </h1>
         
         <div className="flex flex-wrap items-center justify-between text-gray-500 dark:text-gray-400 text-sm mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-4 mb-2 sm:mb-0">
-            <span className="flex items-center"><Clock size={16} className="mr-1"/> {news.uploadTime}</span>
+            <span className="flex items-center"><Clock size={16} className="mr-1"/> {displayUploadTime}</span>
             <span className="flex items-center"><Eye size={16} className="mr-1"/> {news.views} {t('views')}</span>
           </div>
           <div className="flex items-center space-x-3">
@@ -38,7 +43,7 @@ const NewsDetail = () => {
         </div>
 
         <div className="relative w-full h-[300px] md:h-[450px] rounded-xl overflow-hidden mb-8">
-          <img src={news.imageUrl} alt={news.title} className="w-full h-full object-cover" />
+          <img src={news.imageUrl} alt={displayTitle} className="w-full h-full object-cover" />
           {news.isVideo && (
             <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
               <div className="w-16 h-16 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform">
@@ -48,7 +53,7 @@ const NewsDetail = () => {
           )}
         </div>
 
-        <div className="prose dark:prose-invert max-w-none text-lg leading-relaxed text-gray-700 dark:text-gray-300" dangerouslySetInnerHTML={{ __html: news.content || news.description }}>
+        <div className="prose dark:prose-invert max-w-none text-lg leading-relaxed text-gray-700 dark:text-gray-300" dangerouslySetInnerHTML={{ __html: displayContent || displayDescription }}>
         </div>
       </article>
 
