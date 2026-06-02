@@ -6,7 +6,10 @@ const path = require('path');
 const { bucket } = require('../config/firebase');
 
 // Configure local uploads directory
-const uploadDir = path.join(__dirname, '..', 'uploads');
+const uploadDir = process.env.VERCEL 
+  ? path.join('/tmp', 'uploads')
+  : path.join(__dirname, '..', 'uploads');
+
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -41,7 +44,7 @@ async function deleteImageFile(imageUrl) {
       const parts = imageUrl.split('/uploads/');
       if (parts.length > 1) {
         const filename = parts[1];
-        const filePath = path.join(__dirname, '..', 'uploads', filename);
+        const filePath = path.join(uploadDir, filename);
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath);
           console.log(`Deleted local image file: ${filename}`);
