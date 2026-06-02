@@ -1,7 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const News = require('../models/News');
-const mongoose = require('mongoose');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
@@ -152,20 +150,11 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const { category } = req.query;
-    
-    // Check if connected to MongoDB. Ready state 1 means connected.
-    if (mongoose.connection.readyState !== 1) {
-      console.log("Using in-memory fallback for GET /api/news");
-      let list = [...inMemoryNews];
-      if (category) {
-        list = list.filter(item => item.category === category);
-      }
-      return res.json(list);
+    let list = [...inMemoryNews];
+    if (category) {
+      list = list.filter(item => item.category === category);
     }
-
-    const query = category ? { category } : {};
-    const newsList = await News.find(query).sort({ createdAt: -1 });
-    res.json(newsList);
+    res.json(list);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -177,7 +166,6 @@ router.post('/', async (req, res) => {
     const { title, description, content, ...rest } = req.body;
     
     // Auto translate: we translate the input to both languages
-    // This allows the admin to write in either language and still get both.
     const title_en = await translateText(title, 'en');
     const title_ta = await translateText(title, 'ta');
     const description_en = await translateText(description, 'en');
@@ -185,30 +173,20 @@ router.post('/', async (req, res) => {
     const content_en = await translateText(content, 'en');
     const content_ta = await translateText(content, 'ta');
 
-    const newsData = {
+    const savedNews = {
+      _id: Date.now().toString(),
       ...rest,
       title: title_en,
       title_ta,
       description: description_en,
       description_ta,
       content: content_en,
-      content_ta
+      content_ta,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
-    if (mongoose.connection.readyState !== 1) {
-      console.log("Using in-memory fallback for POST /api/news");
-      const savedNews = {
-        _id: Date.now().toString(),
-        ...newsData,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      inMemoryNews.unshift(savedNews);
-      return res.status(201).json(savedNews);
-    }
-
-    const news = new News(newsData);
-    const savedNews = await news.save();
+    inMemoryNews.unshift(savedNews);
     res.status(201).json(savedNews);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -218,21 +196,11 @@ router.post('/', async (req, res) => {
 // Delete news
 router.delete('/:id', async (req, res) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
-      console.log("Using in-memory fallback for DELETE /api/news");
-      const deletedArticle = inMemoryNews.find(item => item._id === req.params.id || item.id === req.params.id);
-      if (deletedArticle) {
-        await deleteImageFile(deletedArticle.imageUrl);
-      }
-      inMemoryNews = inMemoryNews.filter(item => item._id !== req.params.id && item.id !== req.params.id);
-      return res.json({ message: 'News deleted (in-memory)' });
-    }
-
-    const deletedArticle = await News.findById(req.params.id);
+    const deletedArticle = inMemoryNews.find(item => item._id === req.params.id || item.id === req.params.id);
     if (deletedArticle) {
       await deleteImageFile(deletedArticle.imageUrl);
-      await News.findByIdAndDelete(req.params.id);
     }
+    inMemoryNews = inMemoryNews.filter(item => item._id !== req.params.id && item.id !== req.params.id);
     res.json({ message: 'News deleted' });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -242,24 +210,16 @@ router.delete('/:id', async (req, res) => {
 // Update news
 router.put('/:id', async (req, res) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
-      console.log("Using in-memory fallback for PUT /api/news");
-      const index = inMemoryNews.findIndex(item => item._id === req.params.id || item.id === req.params.id);
-      if (index !== -1) {
-        inMemoryNews[index] = { ...inMemoryNews[index], ...req.body };
-        return res.json(inMemoryNews[index]);
-      }
-      return res.status(404).json({ message: 'News not found' });
+    const index = inMemoryNews.findIndex(item => item._id === req.params.id || item.id === req.params.id);
+    if (index !== -1) {
+      inMemoryNews[index] = { ...inMemoryNews[index], ...req.body, updatedAt: new Date().toISOString() };
+      return res.json(inMemoryNews[index]);
     }
-
-    const updatedNews = await News.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updatedNews) {
-      return res.status(404).json({ message: 'News not found' });
-    }
-    res.json(updatedNews);
+    res.status(404).json({ message: 'News not found' });
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 });
 
+router.deleteImageFile = deleteImageFile;
 module.exports = router;
