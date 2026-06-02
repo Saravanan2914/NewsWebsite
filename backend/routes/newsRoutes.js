@@ -37,8 +37,29 @@ async function deleteImageFile(imageUrl) {
   }
 }
 
-// In-memory fallback database for premium offline/local experience when Firebase is not configured
+// In-memory fallback database with file-based persistence for premium offline/local experience when Firebase is not configured
+const FALLBACK_DIR = process.env.VERCEL ? '/tmp' : path.join(__dirname, '..');
+const NEWS_FILE = path.join(FALLBACK_DIR, 'news_fallback.json');
+
 let inMemoryNews = [];
+
+// Load fallback news from local JSON file on start
+try {
+  if (fs.existsSync(NEWS_FILE)) {
+    inMemoryNews = JSON.parse(fs.readFileSync(NEWS_FILE, 'utf8'));
+    console.log(`Loaded ${inMemoryNews.length} fallback news items from local file: ${NEWS_FILE}`);
+  }
+} catch (err) {
+  console.error("Error loading fallback news file:", err.message);
+}
+
+function saveFallbackNews() {
+  try {
+    fs.writeFileSync(NEWS_FILE, JSON.stringify(inMemoryNews, null, 2));
+  } catch (err) {
+    console.error("Error saving fallback news file:", err.message);
+  }
+}
 
 async function translateText(text, targetLang) {
   if (!text) return text;
@@ -100,6 +121,7 @@ async function cleanupExpiredNews() {
     deletedCount = initialLength - inMemoryNews.length;
     if (deletedCount > 0) {
       console.log(`[In-Memory Cleanup] Deleted ${deletedCount} expired fallback articles.`);
+      saveFallbackNews();
     }
   }
   return deletedCount;
@@ -123,6 +145,7 @@ router.get('/inmemory-clear', async (req, res) => {
     }
   } else {
     inMemoryNews = [];
+    saveFallbackNews();
     res.json({ message: "In-memory database cleared successfully" });
   }
 });
@@ -270,6 +293,7 @@ router.post('/', async (req, res) => {
         ...newsData
       };
       inMemoryNews.unshift(savedNews);
+      saveFallbackNews();
       console.log(`[In-Memory Fallback] Saved article: ${savedNews.id}`);
       res.status(201).json(savedNews);
     }
@@ -302,6 +326,7 @@ router.delete('/:id', async (req, res) => {
         await deleteImageFile(deletedArticle.imageUrl);
       }
       inMemoryNews = inMemoryNews.filter(item => String(item._id || item.id) !== String(id));
+      saveFallbackNews();
       res.json({ message: 'News article deleted from in-memory fallback successfully.' });
     }
   } catch (err) {
@@ -334,6 +359,7 @@ router.put('/:id', async (req, res) => {
       const index = inMemoryNews.findIndex(item => String(item._id || item.id) === String(id));
       if (index !== -1) {
         inMemoryNews[index] = { ...inMemoryNews[index], ...updateData };
+        saveFallbackNews();
         return res.json(inMemoryNews[index]);
       }
       res.status(404).json({ message: 'News article not found in-memory fallback.' });
