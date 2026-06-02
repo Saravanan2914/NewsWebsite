@@ -31,8 +31,17 @@ function App() {
       try {
         const response = await fetch(getApiUrl('/api/news'));
         if (response.ok) {
-          const data = await response.json();
-          dispatch(setNews(data));
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const data = await response.json();
+            if (Array.isArray(data)) {
+              dispatch(setNews(data));
+            } else {
+              console.error('Fetched news data is not an array:', data);
+            }
+          } else {
+            console.error('Fetched news is not JSON. Status:', response.status);
+          }
         }
       } catch (error) {
         console.error('Error fetching news:', error);

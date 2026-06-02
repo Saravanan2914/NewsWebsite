@@ -19,10 +19,15 @@ const newsSlice = createSlice({
   initialState,
   reducers: {
     setNews: (state, action) => {
-      state.items = action.payload.map(item => ({
-        ...item,
-        id: item._id || item.id
-      }));
+      if (action.payload && Array.isArray(action.payload)) {
+        state.items = action.payload.map(item => ({
+          ...item,
+          id: item._id || item.id
+        }));
+      } else {
+        console.warn("setNews: payload is not an array", action.payload);
+        state.items = [];
+      }
     },
     addNews: (state, action) => {
       const newItem = {
