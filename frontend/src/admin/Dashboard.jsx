@@ -187,7 +187,7 @@ const Dashboard = () => {
         : await translateText(editingTickerText, 'ta');
       
       const updatedList = breakingNewsItems.map(item => {
-        if (item.id === id) {
+        if (String(item.id) === String(id)) {
           return { ...item, text: textEn, text_ta: textTa };
         }
         return item;

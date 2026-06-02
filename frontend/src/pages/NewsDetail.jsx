@@ -7,8 +7,8 @@ import { useLanguage } from '../contexts/LanguageContext';
 const NewsDetail = () => {
   const { id } = useParams();
   const newsItems = useSelector((state) => state.news.items);
-  const news = newsItems.find(n => n.id === parseInt(id));
-  const relatedNews = newsItems.filter(n => n.category === news?.category && n.id !== news?.id).slice(0, 3);
+  const news = newsItems.find(n => String(n.id) === String(id));
+  const relatedNews = newsItems.filter(n => n.category === news?.category && String(n.id) !== String(news?.id)).slice(0, 3);
   const { t, language } = useLanguage();
 
   if (!news) return <div className="text-center py-20">{t('newsNotFound')}</div>;

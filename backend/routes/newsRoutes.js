@@ -196,11 +196,11 @@ router.post('/', async (req, res) => {
 // Delete news
 router.delete('/:id', async (req, res) => {
   try {
-    const deletedArticle = inMemoryNews.find(item => item._id === req.params.id || item.id === req.params.id);
+    const deletedArticle = inMemoryNews.find(item => String(item._id || item.id) === String(req.params.id));
     if (deletedArticle) {
       await deleteImageFile(deletedArticle.imageUrl);
     }
-    inMemoryNews = inMemoryNews.filter(item => item._id !== req.params.id && item.id !== req.params.id);
+    inMemoryNews = inMemoryNews.filter(item => String(item._id || item.id) !== String(req.params.id));
     res.json({ message: 'News deleted' });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -210,7 +210,7 @@ router.delete('/:id', async (req, res) => {
 // Update news
 router.put('/:id', async (req, res) => {
   try {
-    const index = inMemoryNews.findIndex(item => item._id === req.params.id || item.id === req.params.id);
+    const index = inMemoryNews.findIndex(item => String(item._id || item.id) === String(req.params.id));
     if (index !== -1) {
       inMemoryNews[index] = { ...inMemoryNews[index], ...req.body, updatedAt: new Date().toISOString() };
       return res.json(inMemoryNews[index]);

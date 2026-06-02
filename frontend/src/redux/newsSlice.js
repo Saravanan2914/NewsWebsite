@@ -56,22 +56,22 @@ const newsSlice = createSlice({
       localStorage.setItem('breakingNews', JSON.stringify(state.breakingNews));
     },
     deleteBreakingNewsItem: (state, action) => {
-      state.breakingNews = state.breakingNews.filter(item => item.id !== action.payload);
+      state.breakingNews = state.breakingNews.filter(item => String(item.id) !== String(action.payload));
       localStorage.setItem('breakingNews', JSON.stringify(state.breakingNews));
     },
     deleteNews: (state, action) => {
-      state.items = state.items.filter(item => item.id !== action.payload);
+      state.items = state.items.filter(item => String(item.id) !== String(action.payload));
       localStorage.setItem('newsItems', JSON.stringify(state.items));
     },
     toggleBreaking: (state, action) => {
-      const article = state.items.find(item => item.id === action.payload);
+      const article = state.items.find(item => String(item.id) === String(action.payload));
       if (article) {
         article.isBreaking = !article.isBreaking;
       }
       localStorage.setItem('newsItems', JSON.stringify(state.items));
     },
     toggleTrending: (state, action) => {
-      const article = state.items.find(item => item.id === action.payload);
+      const article = state.items.find(item => String(item.id) === String(action.payload));
       if (article) {
         article.isTrending = !article.isTrending;
       }
