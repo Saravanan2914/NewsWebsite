@@ -87,15 +87,16 @@ const Navbar = () => {
         )}
         
         <div className="flex items-center space-x-3 md:space-x-4 z-10">
-          <div className="flex items-center text-sm font-bold bg-gray-100 dark:bg-gray-800 rounded p-0.5">
-            <button onClick={() => setLanguage('TA')} className={`px-2 py-1 rounded transition-colors ${language === 'TA' ? 'bg-primary text-white' : 'text-gray-600 dark:text-gray-300 hover:text-primary'}`}>
-              தமிழ்
-            </button>
-            <span className="text-gray-400 dark:text-gray-500 text-xs">|</span>
-            <button onClick={() => setLanguage('EN')} className={`px-2 py-1 rounded transition-colors ${language === 'EN' ? 'bg-primary text-white' : 'text-gray-600 dark:text-gray-300 hover:text-primary'}`}>
-              English
-            </button>
-          </div>
+          {/* Language Toggle (Compact Globe Icon Button) */}
+          <button 
+            onClick={() => setLanguage(language === 'TA' ? 'EN' : 'TA')}
+            className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-all border border-gray-200 dark:border-gray-700 text-[10px] font-black shadow-sm transform active:scale-95"
+            aria-label="Toggle Language"
+            title="Toggle Language"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-80 shrink-0"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <span className="tracking-wider">{language === 'TA' ? 'TA' : 'EN'}</span>
+          </button>
           <button onClick={() => setIsSearchOpen(!isSearchOpen)} className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors hidden md:block">
             <Search size={20} />
           </button>
