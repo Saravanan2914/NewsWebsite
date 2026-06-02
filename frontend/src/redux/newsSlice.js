@@ -19,10 +19,17 @@ const newsSlice = createSlice({
   initialState,
   reducers: {
     setNews: (state, action) => {
-      state.items = action.payload;
+      state.items = action.payload.map(item => ({
+        ...item,
+        id: item._id || item.id
+      }));
     },
     addNews: (state, action) => {
-      state.items.unshift(action.payload);
+      const newItem = {
+        ...action.payload,
+        id: action.payload._id || action.payload.id
+      };
+      state.items.unshift(newItem);
     },
     setSearchQuery: (state, action) => {
       state.searchQuery = action.payload;

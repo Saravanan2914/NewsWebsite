@@ -251,7 +251,6 @@ const Dashboard = () => {
       }
 
       const newArticle = {
-        id: Date.now(),
         ...previewData,
         imageUrl: mediaUrl,
         isVideo,
@@ -260,11 +259,24 @@ const Dashboard = () => {
         views: '0',
       };
 
-      dispatch(addNews(newArticle));
-      setShowPreview(false);
-      setTitle(''); setCategory(''); setDescription(''); setContent('');
-      setIsBreaking(false); setIsTrending(false); setMediaFile(null); setPreviewData(null);
-      showToast('success', `"${newArticle.title}" published in EN & Tamil!`);
+      const response = await fetch('http://localhost:5000/api/news', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newArticle),
+      });
+
+      if (response.ok) {
+        const savedNews = await response.json();
+        dispatch(addNews(savedNews));
+        setShowPreview(false);
+        setTitle(''); setCategory(''); setDescription(''); setContent('');
+        setIsBreaking(false); setIsTrending(false); setMediaFile(null); setPreviewData(null);
+        showToast('success', `"${savedNews.title || savedNews.title_ta}" published in EN & Tamil!`);
+      } else {
+        showToast('error', 'Publishing failed. Backend returned an error.');
+      }
     } catch (e) {
       console.error(e);
       showToast('error', 'Publishing failed. Please try again.');
@@ -477,9 +489,23 @@ const Dashboard = () => {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                       <button
-                        onClick={() => {
-                          dispatch(toggleBreaking(news.id));
-                          showToast('success', `Toggled Breaking status for "${news.title}"`);
+                        onClick={async () => {
+                          try {
+                            const response = await fetch(`http://localhost:5000/api/news/${news.id}`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ isBreaking: !news.isBreaking })
+                            });
+                            if (response.ok) {
+                              dispatch(toggleBreaking(news.id));
+                              showToast('success', `Toggled Breaking status for "${news.title}"`);
+                            } else {
+                              showToast('error', 'Failed to update article status.');
+                            }
+                          } catch (err) {
+                            console.error(err);
+                            showToast('error', 'Network error.');
+                          }
                         }}
                         className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
                           news.isBreaking
@@ -492,9 +518,23 @@ const Dashboard = () => {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                       <button
-                        onClick={() => {
-                          dispatch(toggleTrending(news.id));
-                          showToast('success', `Toggled Trending status for "${news.title}"`);
+                        onClick={async () => {
+                          try {
+                            const response = await fetch(`http://localhost:5000/api/news/${news.id}`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ isTrending: !news.isTrending })
+                            });
+                            if (response.ok) {
+                              dispatch(toggleTrending(news.id));
+                              showToast('success', `Toggled Trending status for "${news.title}"`);
+                            } else {
+                              showToast('error', 'Failed to update article status.');
+                            }
+                          } catch (err) {
+                            console.error(err);
+                            showToast('error', 'Network error.');
+                          }
                         }}
                         className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
                           news.isTrending
@@ -508,9 +548,21 @@ const Dashboard = () => {
                     <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{news.uploadTime}</td>
                     <td className="px-6 py-4 text-sm text-right space-x-3">
                       <button 
-                        onClick={() => {
-                          dispatch(deleteNews(news.id));
-                          showToast('success', `Deleted article "${news.title}"`);
+                        onClick={async () => {
+                          try {
+                            const response = await fetch(`http://localhost:5000/api/news/${news.id}`, {
+                              method: 'DELETE'
+                            });
+                            if (response.ok) {
+                              dispatch(deleteNews(news.id));
+                              showToast('success', `Deleted article "${news.title}"`);
+                            } else {
+                              showToast('error', 'Failed to delete article.');
+                            }
+                          } catch (err) {
+                            console.error(err);
+                            showToast('error', 'Network error.');
+                          }
                         }}
                         className="text-red-600 hover:underline font-bold text-xs"
                       >

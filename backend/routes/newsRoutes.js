@@ -108,4 +108,27 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// Update news
+router.put('/:id', async (req, res) => {
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      console.log("Using in-memory fallback for PUT /api/news");
+      const index = inMemoryNews.findIndex(item => item._id === req.params.id || item.id === req.params.id);
+      if (index !== -1) {
+        inMemoryNews[index] = { ...inMemoryNews[index], ...req.body };
+        return res.json(inMemoryNews[index]);
+      }
+      return res.status(404).json({ message: 'News not found' });
+    }
+
+    const updatedNews = await News.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!updatedNews) {
+      return res.status(404).json({ message: 'News not found' });
+    }
+    res.json(updatedNews);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
 module.exports = router;
