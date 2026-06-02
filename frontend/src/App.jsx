@@ -34,8 +34,9 @@ function App() {
           const contentType = response.headers.get("content-type");
           if (contentType && contentType.includes("application/json")) {
             const data = await response.json();
+            const isPersistent = response.headers.get('x-database-persistent') === 'true';
             if (Array.isArray(data)) {
-              dispatch(setNews(data));
+              dispatch(setNews({ items: data, isPersistent }));
             } else {
               console.error('Fetched news data is not an array:', data);
             }

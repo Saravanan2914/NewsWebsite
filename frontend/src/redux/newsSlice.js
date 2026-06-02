@@ -21,15 +21,42 @@ const newsSlice = createSlice({
   initialState,
   reducers: {
     setNews: (state, action) => {
+      let payloadItems = [];
+      let isPersistent = false;
+
       if (action.payload && Array.isArray(action.payload)) {
-        state.items = action.payload.map(item => ({
-          ...item,
-          id: item._id || item.id
-        }));
-        localStorage.setItem('newsItems', JSON.stringify(state.items));
+        payloadItems = action.payload;
+      } else if (action.payload && typeof action.payload === 'object' && Array.isArray(action.payload.items)) {
+        payloadItems = action.payload.items;
+        isPersistent = !!action.payload.isPersistent;
       } else {
-        console.warn("setNews: payload is not an array", action.payload);
+        console.warn("setNews: payload is not formatted correctly", action.payload);
+        return;
       }
+
+      const mappedItems = payloadItems.map(item => ({
+        ...item,
+        id: item._id || item.id
+      }));
+
+      // If backend is running without Firestore persistence (offline fallback), and it returns an empty
+      // array (due to a stateless serverless container restart on Vercel), we retain non-expired local storage cache.
+      if (!isPersistent && mappedItems.length === 0 && state.items.length > 0) {
+        const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+        const validLocalItems = state.items.filter(item => {
+          const itemTime = new Date(item.createdAt).getTime();
+          return !isNaN(itemTime) && itemTime >= cutoff;
+        });
+
+        if (validLocalItems.length > 0) {
+          state.items = validLocalItems;
+          localStorage.setItem('newsItems', JSON.stringify(state.items));
+          return;
+        }
+      }
+
+      state.items = mappedItems;
+      localStorage.setItem('newsItems', JSON.stringify(state.items));
     },
     addNews: (state, action) => {
       const newItem = {

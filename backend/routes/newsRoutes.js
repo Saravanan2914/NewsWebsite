@@ -196,6 +196,10 @@ router.get('/', async (req, res) => {
 
     const { category } = req.query;
 
+    // Set database persistence headers
+    res.setHeader('X-Database-Persistent', db ? 'true' : 'false');
+    res.setHeader('Access-Control-Expose-Headers', 'X-Database-Persistent');
+
     if (db) {
       let query = db.collection('news').orderBy('createdAt', 'desc');
       if (category) {
