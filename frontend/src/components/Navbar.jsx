@@ -61,11 +61,11 @@ const Navbar = () => {
         
         {!isSearchOpen ? (
           <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center z-10">
-            <Link to="/" className="text-xl md:text-3xl font-extrabold text-primary tracking-tight leading-none flex items-center justify-center gap-1.5 md:gap-2.5">
-              <img src="/logo.png" alt="GOOD NEWS Logo" className="h-8 w-8 md:h-10 md:w-10 object-contain shrink-0" />
+            <Link to="/" className="text-[17px] md:text-3xl font-extrabold text-primary tracking-tight leading-none flex items-center justify-center gap-1 md:gap-2.5">
+              <img src="/logo.png" alt="GOOD NEWS Logo" className="h-7 w-7 md:h-10 md:w-10 object-contain shrink-0" />
               <span>GOOD NEWS</span>
             </Link>
-            <span className="text-[8px] md:text-[10px] font-extrabold text-primary dark:text-primary-light bg-primary/10 dark:bg-primary/20 border border-primary/25 px-2 py-0.5 md:px-2.5 md:py-0.5 rounded-full tracking-wider mt-1 md:mt-1.5 whitespace-nowrap shadow-sm">
+            <span className="text-[7.5px] md:text-[10px] font-extrabold text-primary dark:text-primary-light bg-primary/10 dark:bg-primary/20 border border-primary/25 px-1.5 py-0.5 md:px-2.5 md:py-0.5 rounded-full tracking-wider mt-0.5 md:mt-1.5 whitespace-nowrap shadow-sm">
               V. Ramachandaran ({language === 'TA' ? 'ஆசிரியர்' : 'Editor'})
             </span>
           </div>
@@ -86,15 +86,15 @@ const Navbar = () => {
           </form>
         )}
         
-        <div className="flex items-center space-x-3 md:space-x-4 z-10">
+        <div className="flex items-center space-x-1.5 md:space-x-4 z-10">
           {/* Language Toggle (Compact Globe Icon Button) */}
           <button 
             onClick={() => setLanguage(language === 'TA' ? 'EN' : 'TA')}
-            className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-all border border-gray-200 dark:border-gray-700 text-[10px] font-black shadow-sm transform active:scale-95"
+            className="flex items-center space-x-1 px-1.5 py-1 md:space-x-1.5 md:px-2.5 md:py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-all border border-gray-200 dark:border-gray-700 text-[9px] md:text-[10px] font-black shadow-sm transform active:scale-95 shrink-0"
             aria-label="Toggle Language"
             title="Toggle Language"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-80 shrink-0"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-80 shrink-0"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
             <span className="tracking-wider">{language === 'TA' ? 'TA' : 'EN'}</span>
           </button>
           <button onClick={() => setIsSearchOpen(!isSearchOpen)} className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors hidden md:block">
@@ -103,7 +103,7 @@ const Navbar = () => {
           <button onClick={toggleTheme} className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
             {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
           </button>
-          <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+          <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden text-gray-600 dark:text-gray-300 hover:text-primary transition-colors shrink-0">
             <Menu size={24} />
           </button>
         </div>
