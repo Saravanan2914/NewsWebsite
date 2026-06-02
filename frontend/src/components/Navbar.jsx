@@ -65,7 +65,7 @@ const Navbar = () => {
               <img src="/logo.png" alt="GOOD NEWS Logo" className="h-9 w-9 md:h-11 md:w-11 object-contain shrink-0" />
               <span>GOOD NEWS</span>
             </Link>
-            <span className="text-[9px] md:text-[10px] font-bold text-gray-400 dark:text-gray-500 tracking-wider mt-1 whitespace-nowrap">
+            <span className="text-[9px] md:text-[10px] font-extrabold text-primary dark:text-primary-light bg-primary/10 dark:bg-primary/20 border border-primary/25 px-2.5 py-0.5 rounded-full tracking-wider mt-1.5 whitespace-nowrap shadow-sm">
               V. Ramachandaran ({language === 'TA' ? 'ஆசிரியர்' : 'Editor'})
             </span>
           </div>
