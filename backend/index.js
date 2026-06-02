@@ -8,7 +8,8 @@ const newsRoutes = require('./routes/newsRoutes');
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 const uploadDir = process.env.VERCEL 
   ? path.join('/tmp', 'uploads')
   : path.join(__dirname, 'uploads');
