@@ -4,6 +4,7 @@ import { UploadCloud, Image as ImageIcon, LayoutDashboard, FileText, LogOut, Eye
 import { useDispatch, useSelector } from 'react-redux';
 import { addNews, updateBreakingNews, addBreakingNewsItem, deleteBreakingNewsItem, deleteNews, toggleBreaking, toggleTrending } from '../redux/newsSlice';
 import { translateText } from '../utils/translator';
+import { getApiUrl } from '../utils/config';
 
 const CATEGORIES = ["Tamil Nadu", "India", "World", "Politics", "Cinema", "Sports", "Technology", "Education", "Business"];
 
@@ -259,7 +260,7 @@ const Dashboard = () => {
         views: '0',
       };
 
-      const response = await fetch('http://localhost:5000/api/news', {
+      const response = await fetch(getApiUrl('/api/news'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -491,7 +492,7 @@ const Dashboard = () => {
                       <button
                         onClick={async () => {
                           try {
-                            const response = await fetch(`http://localhost:5000/api/news/${news.id}`, {
+                            const response = await fetch(getApiUrl(`/api/news/${news.id}`), {
                               method: 'PUT',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({ isBreaking: !news.isBreaking })
@@ -520,7 +521,7 @@ const Dashboard = () => {
                       <button
                         onClick={async () => {
                           try {
-                            const response = await fetch(`http://localhost:5000/api/news/${news.id}`, {
+                            const response = await fetch(getApiUrl(`/api/news/${news.id}`), {
                               method: 'PUT',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({ isTrending: !news.isTrending })
@@ -550,7 +551,7 @@ const Dashboard = () => {
                       <button 
                         onClick={async () => {
                           try {
-                            const response = await fetch(`http://localhost:5000/api/news/${news.id}`, {
+                            const response = await fetch(getApiUrl(`/api/news/${news.id}`), {
                               method: 'DELETE'
                             });
                             if (response.ok) {

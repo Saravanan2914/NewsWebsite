@@ -2,6 +2,7 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { setNews } from './redux/newsSlice';
+import { getApiUrl } from './utils/config';
 import MainLayout from './layouts/MainLayout';
 import Home from './pages/Home';
 import CategoryView from './pages/CategoryView';
@@ -28,7 +29,7 @@ function App() {
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/news');
+        const response = await fetch(getApiUrl('/api/news'));
         if (response.ok) {
           const data = await response.json();
           dispatch(setNews(data));
