@@ -32,8 +32,8 @@ const NewsDetail = () => {
           {displayTitle}
         </h1>
         
-        <div className="flex flex-wrap items-center justify-between text-gray-500 dark:text-gray-400 text-sm mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center space-x-4 mb-2 sm:mb-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between text-gray-500 dark:text-gray-400 text-sm mb-6 pb-4 border-b border-gray-200 dark:border-gray-700 gap-3">
+          <div className="flex items-center space-x-4">
             <span className="flex items-center"><Clock size={16} className="mr-1"/> {displayUploadTime}</span>
             <span className="flex items-center"><Eye size={16} className="mr-1"/> {news.views} {t('views')}</span>
           </div>
