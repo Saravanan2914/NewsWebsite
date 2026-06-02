@@ -143,16 +143,27 @@ const Dashboard = () => {
       const textEn = await translateText(tickerInput, 'en');
       const textTa = await translateText(tickerInput, 'ta');
       const newItem = {
-        id: Date.now().toString(),
         text: textEn,
         text_ta: textTa
       };
-      dispatch(addBreakingNewsItem(newItem));
-      setTickerInput('');
-      showToast('success', 'Added breaking news ticker item!');
+
+      const response = await fetch(getApiUrl('/api/news/tickers'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newItem)
+      });
+
+      if (response.ok) {
+        const savedItem = await response.json();
+        dispatch(addBreakingNewsItem(savedItem));
+        setTickerInput('');
+        showToast('success', 'Added breaking news ticker item!');
+      } else {
+        showToast('error', 'Failed to add ticker item to database.');
+      }
     } catch (err) {
       console.error(err);
-      showToast('error', 'Translation failed. Using fallback.');
+      showToast('error', 'Error occurred. Using fallback.');
       const newItem = {
         id: Date.now().toString(),
         text: tickerInput,
@@ -186,15 +197,23 @@ const Dashboard = () => {
         ? editingTickerTextTa 
         : await translateText(editingTickerText, 'ta');
       
-      const updatedList = breakingNewsItems.map(item => {
-        if (String(item.id) === String(id)) {
-          return { ...item, text: textEn, text_ta: textTa };
-        }
-        return item;
+      const response = await fetch(getApiUrl(`/api/news/tickers/${id}`), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: textEn, text_ta: textTa })
       });
-      dispatch(updateBreakingNews(updatedList));
-      handleCancelEditTicker();
-      showToast('success', 'Updated ticker item!');
+
+      if (response.ok) {
+        const updatedItem = await response.json();
+        const updatedList = breakingNewsItems.map(item => 
+          String(item.id) === String(id) ? updatedItem : item
+        );
+        dispatch(updateBreakingNews(updatedList));
+        handleCancelEditTicker();
+        showToast('success', 'Updated ticker item!');
+      } else {
+        showToast('error', 'Failed to save updates to database.');
+      }
     } catch (err) {
       console.error(err);
       showToast('error', 'Failed to save edits.');
@@ -203,9 +222,21 @@ const Dashboard = () => {
     }
   };
 
-  const handleDeleteTicker = (id) => {
-    dispatch(deleteBreakingNewsItem(id));
-    showToast('success', 'Deleted ticker item!');
+  const handleDeleteTicker = async (id) => {
+    try {
+      const response = await fetch(getApiUrl(`/api/news/tickers/${id}`), {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        dispatch(deleteBreakingNewsItem(id));
+        showToast('success', 'Deleted ticker item!');
+      } else {
+        showToast('error', 'Failed to delete ticker item from database.');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('error', 'Network error.');
+    }
   };
 
   const validate = () => {

@@ -137,6 +137,104 @@ router.get('/inmemory-clear-expired', async (req, res) => {
   }
 });
 
+// --- TICKER ENDPOINTS ---
+let inMemoryTickers = [];
+
+// GET all tickers
+router.get('/tickers', async (req, res) => {
+  try {
+    if (db) {
+      const snapshot = await db.collection('tickers').orderBy('createdAt', 'asc').get();
+      const list = snapshot.docs.map(doc => ({
+        id: doc.id,
+        _id: doc.id,
+        ...doc.data()
+      }));
+      res.json(list);
+    } else {
+      res.json(inMemoryTickers);
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// POST: Add new ticker
+router.post('/tickers', async (req, res) => {
+  try {
+    const { text, text_ta } = req.body;
+    const tickerData = {
+      text,
+      text_ta,
+      createdAt: new Date().toISOString()
+    };
+
+    if (db) {
+      const docRef = await db.collection('tickers').add(tickerData);
+      res.status(201).json({
+        id: docRef.id,
+        _id: docRef.id,
+        ...tickerData
+      });
+    } else {
+      const savedTicker = {
+        id: Date.now().toString(),
+        _id: Date.now().toString(),
+        ...tickerData
+      };
+      inMemoryTickers.push(savedTicker);
+      res.status(201).json(savedTicker);
+    }
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// PUT: Update ticker
+router.put('/tickers/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { text, text_ta } = req.body;
+
+    if (db) {
+      const docRef = db.collection('tickers').doc(id);
+      await docRef.update({ text, text_ta, updatedAt: new Date().toISOString() });
+      const updatedDoc = await docRef.get();
+      res.json({
+        id: updatedDoc.id,
+        _id: updatedDoc.id,
+        ...updatedDoc.data()
+      });
+    } else {
+      const index = inMemoryTickers.findIndex(item => String(item.id) === String(id));
+      if (index !== -1) {
+        inMemoryTickers[index] = { ...inMemoryTickers[index], text, text_ta, updatedAt: new Date().toISOString() };
+        res.json(inMemoryTickers[index]);
+      } else {
+        res.status(404).json({ message: 'Ticker not found' });
+      }
+    }
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// DELETE: Ticker
+router.delete('/tickers/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    if (db) {
+      await db.collection('tickers').doc(id).delete();
+      res.json({ message: 'Ticker deleted successfully from Firestore' });
+    } else {
+      inMemoryTickers = inMemoryTickers.filter(item => String(item.id) !== String(id));
+      res.json({ message: 'Ticker deleted successfully from fallback' });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // Direct Memory-buffer File Upload to Firebase Storage
 router.post('/upload', upload.single('file'), async (req, res) => {
   try {
