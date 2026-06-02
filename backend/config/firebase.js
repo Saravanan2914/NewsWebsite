@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 let bucket = null;
+let db = null;
 
 try {
   const keyPath = path.join(__dirname, '..', 'firebase-key.json');
@@ -13,6 +14,7 @@ try {
       storageBucket: `${serviceAccount.project_id}.appspot.com`
     });
     bucket = admin.storage().bucket();
+    db = admin.firestore();
     console.log("Firebase Admin initialized successfully via firebase-key.json.");
   } else if (process.env.FIREBASE_CONFIG && process.env.FIREBASE_SERVICE_ACCOUNT) {
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
@@ -22,6 +24,7 @@ try {
       storageBucket: config.storageBucket
     });
     bucket = admin.storage().bucket();
+    db = admin.firestore();
     console.log("Firebase Admin initialized successfully via ENV.");
   } else if (process.env.FIREBASE_SERVICE_ACCOUNT) {
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
@@ -30,6 +33,7 @@ try {
       storageBucket: `${serviceAccount.project_id}.firebasestorage.app` // new default format
     });
     bucket = admin.storage().bucket();
+    db = admin.firestore();
     console.log("Firebase Admin initialized successfully via service account ENV.");
   } else {
     console.log("Firebase credentials not found. Local storage fallback will be active.");
@@ -38,4 +42,4 @@ try {
   console.error("Error initializing Firebase Admin SDK:", error);
 }
 
-module.exports = { admin, bucket };
+module.exports = { admin, bucket, db };

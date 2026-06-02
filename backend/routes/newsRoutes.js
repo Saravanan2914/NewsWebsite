@@ -3,52 +3,33 @@ const router = express.Router();
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
-const { bucket } = require('../config/firebase');
+const { bucket, db } = require('../config/firebase');
 
-// Configure local uploads directory
-const uploadDir = process.env.VERCEL 
-  ? path.join('/tmp', 'uploads')
-  : path.join(__dirname, '..', 'uploads');
-
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Set up local storage for multer fallback
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// Set up memory storage for multer (no files written to Vercel/local disk)
+const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// Helper to delete associated image file from disk or Firebase cloud storage
+// Helper to delete associated image file from Firebase cloud storage
 async function deleteImageFile(imageUrl) {
-  if (!imageUrl) return;
+  if (!imageUrl || !bucket) return;
   try {
     if (imageUrl.includes('storage.googleapis.com')) {
-      if (bucket) {
-        const parts = imageUrl.split('/news_media/');
-        if (parts.length > 1) {
-          const filename = 'news_media/' + parts[1];
-          const file = bucket.file(filename);
-          await file.delete();
-          console.log(`Deleted Firebase cloud image: ${filename}`);
-        }
-      }
-    } else if (imageUrl.includes('/uploads/')) {
-      const parts = imageUrl.split('/uploads/');
+      const parts = imageUrl.split(`/${bucket.name}/`);
       if (parts.length > 1) {
         const filename = parts[1];
-        const filePath = path.join(uploadDir, filename);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-          console.log(`Deleted local image file: ${filename}`);
-        }
+        const file = bucket.file(filename);
+        await file.delete();
+        console.log(`Deleted Firebase cloud image: ${filename}`);
+      }
+    } else if (imageUrl.includes('firebasestorage.googleapis.com')) {
+      // Handle alternative URL format: https://firebasestorage.googleapis.com/v0/b/<bucket-name>/o/<filename>?alt=media
+      const parts = imageUrl.split('/o/');
+      if (parts.length > 1) {
+        const encodedFilename = parts[1].split('?')[0];
+        const filename = decodeURIComponent(encodedFilename);
+        const file = bucket.file(filename);
+        await file.delete();
+        console.log(`Deleted Firebase cloud image (encoded): ${filename}`);
       }
     }
   } catch (err) {
@@ -56,7 +37,7 @@ async function deleteImageFile(imageUrl) {
   }
 }
 
-// In-memory fallback database for premium offline/local experience when MongoDB is not running
+// In-memory fallback database for premium offline/local experience when Firebase is not configured
 let inMemoryNews = [];
 
 async function translateText(text, targetLang) {
@@ -72,103 +53,178 @@ async function translateText(text, targetLang) {
   }
 }
 
-// Export the inMemoryNews reference so cron in index.js can clear it if needed
-router.get('/inmemory-clear', (req, res) => {
-  inMemoryNews = [];
-  res.json({ message: "In-memory database cleared" });
-});
+// Automatic 24-hour cleanup service for expired news and associated storage images
+async function cleanupExpiredNews() {
+  const now = new Date().toISOString();
+  let deletedCount = 0;
 
-// Clear expired news (older than 24 hours) from in-memory fallback
-router.get('/inmemory-clear-expired', async (req, res) => {
-  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-  const initialLength = inMemoryNews.length;
+  if (db) {
+    try {
+      const snapshot = await db.collection('news')
+        .where('expiresAt', '<=', now)
+        .get();
 
-  const expiredArticles = inMemoryNews.filter(item => {
-    const itemTime = new Date(item.createdAt).getTime();
-    return itemTime < cutoff;
-  });
+      for (const doc of snapshot.docs) {
+        const article = doc.data();
+        if (article.imageUrl) {
+          await deleteImageFile(article.imageUrl);
+        }
+        await doc.ref.delete();
+        deletedCount++;
+      }
+      if (deletedCount > 0) {
+        console.log(`[Firestore Cleanup] Deleted ${deletedCount} expired articles and their media.`);
+      }
+    } catch (err) {
+      console.error("[Firestore Cleanup] Error during automatic cleanup:", err.message);
+    }
+  } else {
+    // In-memory fallback automatic 24-hour cleanup
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    const initialLength = inMemoryNews.length;
 
-  for (const article of expiredArticles) {
-    await deleteImageFile(article.imageUrl);
+    const expiredArticles = inMemoryNews.filter(item => {
+      const itemTime = new Date(item.createdAt).getTime();
+      return itemTime < cutoff;
+    });
+
+    for (const article of expiredArticles) {
+      await deleteImageFile(article.imageUrl);
+    }
+
+    inMemoryNews = inMemoryNews.filter(item => {
+      const itemTime = new Date(item.createdAt).getTime();
+      return itemTime >= cutoff;
+    });
+
+    deletedCount = initialLength - inMemoryNews.length;
+    if (deletedCount > 0) {
+      console.log(`[In-Memory Cleanup] Deleted ${deletedCount} expired fallback articles.`);
+    }
   }
+  return deletedCount;
+}
 
-  inMemoryNews = inMemoryNews.filter(item => {
-    const itemTime = new Date(item.createdAt).getTime();
-    return itemTime >= cutoff;
-  });
-
-  const deletedCount = initialLength - inMemoryNews.length;
-  res.json({ message: `In-memory expired database cleared. Deleted ${deletedCount} articles.` });
+// Dedicated endpoint to clear all news data (useful for resets)
+router.get('/inmemory-clear', async (req, res) => {
+  if (db) {
+    try {
+      const snapshot = await db.collection('news').get();
+      for (const doc of snapshot.docs) {
+        const article = doc.data();
+        if (article.imageUrl) {
+          await deleteImageFile(article.imageUrl);
+        }
+        await doc.ref.delete();
+      }
+      res.json({ message: "Firestore database cleared successfully" });
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  } else {
+    inMemoryNews = [];
+    res.json({ message: "In-memory database cleared successfully" });
+  }
 });
 
-// File upload endpoint (supports cloud Firebase bucket and server-local disk storage fallback)
+// Dedicated endpoint for scheduled execution (Vercel Cron / Cloud Scheduler)
+router.get('/inmemory-clear-expired', async (req, res) => {
+  try {
+    const deletedCount = await cleanupExpiredNews();
+    res.json({ message: `Database cleanup complete. Purged ${deletedCount} expired articles.` });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Direct Memory-buffer File Upload to Firebase Storage
 router.post('/upload', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded." });
     }
 
-    const localFilePath = req.file.path;
-    const filename = req.file.filename;
-
     if (bucket) {
-      console.log("Uploading to Firebase Storage...");
-      const destination = `news_media/${filename}`;
+      console.log("Uploading direct memory buffer to Firebase Storage...");
+      const uniqueFilename = `news_media/${Date.now()}-${Math.round(Math.random() * 1e9)}-${req.file.originalname}`;
+      const file = bucket.file(uniqueFilename);
 
-      await bucket.upload(localFilePath, {
-        destination: destination,
-        public: true,
+      const stream = file.createWriteStream({
         metadata: {
           contentType: req.file.mimetype,
           cacheControl: 'public, max-age=31536000',
         }
       });
 
-      const publicUrl = `https://storage.googleapis.com/${bucket.name}/${destination}`;
+      stream.on('error', (err) => {
+        console.error("Firebase Storage write stream error:", err);
+        res.status(500).json({ message: err.message });
+      });
 
-      try {
-        fs.unlinkSync(localFilePath);
-      } catch (err) {
-        console.error("Local file cleanup error:", err);
-      }
+      stream.on('finish', async () => {
+        try {
+          // Make file public to allow direct download access on all devices
+          await file.makePublic();
+          const publicUrl = `https://storage.googleapis.com/${bucket.name}/${uniqueFilename}`;
+          console.log("Firebase upload successful. Public URL:", publicUrl);
+          res.json({ imageUrl: publicUrl });
+        } catch (makePublicErr) {
+          console.warn("Failed to makePublic (falling back to media-token URL):", makePublicErr.message);
+          const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(uniqueFilename)}?alt=media`;
+          res.json({ imageUrl: publicUrl });
+        }
+      });
 
-      console.log("Firebase upload successful. Public URL:", publicUrl);
-      return res.json({ imageUrl: publicUrl });
+      stream.end(req.file.buffer);
+    } else {
+      console.log("Firebase Storage not configured. Falling back to default mock Unsplash cover image.");
+      res.json({ imageUrl: "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&q=80&w=800" });
     }
-
-    console.log("Firebase not configured. Using local fallback.");
-    const host = req.get('host');
-    const protocol = req.protocol;
-    const publicUrl = `${protocol}://${host}/uploads/${filename}`;
-
-    console.log("Local upload successful. Public URL:", publicUrl);
-    res.json({ imageUrl: publicUrl });
   } catch (error) {
-    console.error("File upload error:", error);
+    console.error("File upload endpoint error:", error);
     res.status(500).json({ message: error.message });
   }
 });
 
-// Get all news
+// GET all active news (runs automatic 24-hour cleanup inline)
 router.get('/', async (req, res) => {
   try {
+    // Purge expired records inline so they never appear on page load
+    await cleanupExpiredNews();
+
     const { category } = req.query;
-    let list = [...inMemoryNews];
-    if (category) {
-      list = list.filter(item => item.category === category);
+
+    if (db) {
+      let query = db.collection('news').orderBy('createdAt', 'desc');
+      if (category) {
+        query = query.where('category', '==', category);
+      }
+      const snapshot = await query.get();
+      const list = snapshot.docs.map(doc => ({
+        id: doc.id,
+        _id: doc.id,
+        ...doc.data()
+      }));
+      res.json(list);
+    } else {
+      let list = [...inMemoryNews];
+      if (category) {
+        list = list.filter(item => item.category === category);
+      }
+      res.json(list);
     }
-    res.json(list);
   } catch (err) {
+    console.error("Get news error:", err);
     res.status(500).json({ message: err.message });
   }
 });
 
-// Create news
+// POST: Create news (calculates createdAt and exact 24-hour expiresAt)
 router.post('/', async (req, res) => {
   try {
     const { title, description, content, ...rest } = req.body;
     
-    // Auto translate: we translate the input to both languages
+    // Auto translate text bilingual system
     const title_en = await translateText(title, 'en');
     const title_ta = await translateText(title, 'ta');
     const description_en = await translateText(description, 'en');
@@ -176,8 +232,10 @@ router.post('/', async (req, res) => {
     const content_en = await translateText(content, 'en');
     const content_ta = await translateText(content, 'ta');
 
-    const savedNews = {
-      _id: Date.now().toString(),
+    const createdAt = new Date();
+    const expiresAt = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000); // exactly 24 hours later
+
+    const newsData = {
       ...rest,
       title: title_en,
       title_ta,
@@ -185,41 +243,97 @@ router.post('/', async (req, res) => {
       description_ta,
       content: content_en,
       content_ta,
-      createdAt: new Date().toISOString(),
+      createdAt: createdAt.toISOString(),
+      expiresAt: expiresAt.toISOString(),
       updatedAt: new Date().toISOString()
     };
 
-    inMemoryNews.unshift(savedNews);
-    res.status(201).json(savedNews);
+    if (db) {
+      const docRef = await db.collection('news').add(newsData);
+      const savedNews = {
+        id: docRef.id,
+        _id: docRef.id,
+        ...newsData
+      };
+      console.log(`[Firestore] Saved article: ${docRef.id}`);
+      res.status(201).json(savedNews);
+    } else {
+      const savedNews = {
+        id: Date.now().toString(),
+        _id: Date.now().toString(),
+        ...newsData
+      };
+      inMemoryNews.unshift(savedNews);
+      console.log(`[In-Memory Fallback] Saved article: ${savedNews.id}`);
+      res.status(201).json(savedNews);
+    }
   } catch (err) {
+    console.error("Create news error:", err);
     res.status(400).json({ message: err.message });
   }
 });
 
-// Delete news
+// DELETE: News article (purges document and associated Firebase Storage asset)
 router.delete('/:id', async (req, res) => {
   try {
-    const deletedArticle = inMemoryNews.find(item => String(item._id || item.id) === String(req.params.id));
-    if (deletedArticle) {
-      await deleteImageFile(deletedArticle.imageUrl);
+    const id = req.params.id;
+    if (db) {
+      const docRef = db.collection('news').doc(id);
+      const doc = await docRef.get();
+      if (doc.exists) {
+        const article = doc.data();
+        if (article.imageUrl) {
+          await deleteImageFile(article.imageUrl);
+        }
+        await docRef.delete();
+        res.json({ message: 'News article and media deleted from Firebase successfully.' });
+      } else {
+        res.status(404).json({ message: 'News article not found in Firestore.' });
+      }
+    } else {
+      const deletedArticle = inMemoryNews.find(item => String(item._id || item.id) === String(id));
+      if (deletedArticle) {
+        await deleteImageFile(deletedArticle.imageUrl);
+      }
+      inMemoryNews = inMemoryNews.filter(item => String(item._id || item.id) !== String(id));
+      res.json({ message: 'News article deleted from in-memory fallback successfully.' });
     }
-    inMemoryNews = inMemoryNews.filter(item => String(item._id || item.id) !== String(req.params.id));
-    res.json({ message: 'News deleted' });
   } catch (err) {
+    console.error("Delete news error:", err);
     res.status(500).json({ message: err.message });
   }
 });
 
-// Update news
+// PUT: Update news article fields
 router.put('/:id', async (req, res) => {
   try {
-    const index = inMemoryNews.findIndex(item => String(item._id || item.id) === String(req.params.id));
-    if (index !== -1) {
-      inMemoryNews[index] = { ...inMemoryNews[index], ...req.body, updatedAt: new Date().toISOString() };
-      return res.json(inMemoryNews[index]);
+    const id = req.params.id;
+    const updateData = { ...req.body, updatedAt: new Date().toISOString() };
+
+    if (db) {
+      const docRef = db.collection('news').doc(id);
+      const doc = await docRef.get();
+      if (doc.exists) {
+        await docRef.update(updateData);
+        const updatedDoc = await docRef.get();
+        res.json({
+          id: updatedDoc.id,
+          _id: updatedDoc.id,
+          ...updatedDoc.data()
+        });
+      } else {
+        res.status(404).json({ message: 'News article not found in Firestore.' });
+      }
+    } else {
+      const index = inMemoryNews.findIndex(item => String(item._id || item.id) === String(id));
+      if (index !== -1) {
+        inMemoryNews[index] = { ...inMemoryNews[index], ...updateData };
+        return res.json(inMemoryNews[index]);
+      }
+      res.status(404).json({ message: 'News article not found in-memory fallback.' });
     }
-    res.status(404).json({ message: 'News not found' });
   } catch (err) {
+    console.error("Update news error:", err);
     res.status(400).json({ message: err.message });
   }
 });
