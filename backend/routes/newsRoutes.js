@@ -25,6 +25,18 @@ router.get('/inmemory-clear', (req, res) => {
   res.json({ message: "In-memory database cleared" });
 });
 
+// Clear expired news (older than 24 hours) from in-memory fallback
+router.get('/inmemory-clear-expired', (req, res) => {
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  const initialLength = inMemoryNews.length;
+  inMemoryNews = inMemoryNews.filter(item => {
+    const itemTime = new Date(item.createdAt).getTime();
+    return itemTime >= cutoff;
+  });
+  const deletedCount = initialLength - inMemoryNews.length;
+  res.json({ message: `In-memory expired database cleared. Deleted ${deletedCount} articles.` });
+});
+
 // Get all news
 router.get('/', async (req, res) => {
   try {

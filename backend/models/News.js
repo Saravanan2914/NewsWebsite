@@ -15,4 +15,6 @@ const newsSchema = new mongoose.Schema({
   views: { type: Number, default: 0 },
 }, { timestamps: true });
 
+newsSchema.index({ createdAt: 1 }, { expireAfterSeconds: 86400 });
+
 module.exports = mongoose.model('News', newsSchema);

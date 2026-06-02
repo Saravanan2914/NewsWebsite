@@ -19,23 +19,27 @@ mongoose.connect('mongodb://127.0.0.1:27017/goodnews')
 
 app.use('/api/news', newsRoutes);
 
-// Daily News Auto Delete Feature
-// Every news post expires automatically at 12:00 AM daily
-cron.schedule('0 0 * * *', async () => {
-  console.log('Running daily news auto-delete task at 12:00 AM');
+// News Auto Delete Feature
+// Every news post expires automatically exactly 24 hours after publication
+cron.schedule('*/5 * * * *', async () => {
+  console.log('Running 24-hour news auto-delete task...');
   try {
     if (mongoose.connection.readyState !== 1) {
-      console.log('Running daily news auto-delete task via in-memory fallback.');
+      console.log('Running 24-hour news auto-delete task via in-memory fallback.');
       try {
-        await fetch(`http://127.0.0.1:${PORT}/api/news/inmemory-clear`);
-        console.log("Successfully cleared in-memory news articles.");
+        const res = await fetch(`http://127.0.0.1:${PORT}/api/news/inmemory-clear-expired`);
+        const data = await res.json();
+        console.log(data.message);
       } catch (fetchErr) {
-        console.error("Error clearing in-memory news via API:", fetchErr.message);
+        console.error("Error clearing expired in-memory news via API:", fetchErr.message);
       }
       return;
     }
-    const result = await News.deleteMany({});
-    console.log(`Successfully deleted ${result.deletedCount} news articles.`);
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const result = await News.deleteMany({ createdAt: { $lt: cutoff } });
+    if (result.deletedCount > 0) {
+      console.log(`Successfully deleted ${result.deletedCount} expired news articles older than 24 hours.`);
+    }
   } catch (error) {
     console.error("Error during auto-delete task:", error);
   }
