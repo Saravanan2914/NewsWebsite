@@ -246,9 +246,23 @@ const Dashboard = () => {
     try {
       let mediaUrl = 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&q=80&w=800';
       let isVideo = false;
+
       if (mediaFile) {
-        mediaUrl = URL.createObjectURL(mediaFile);
-        isVideo = mediaFile.type.startsWith('video/');
+        const formData = new FormData();
+        formData.append('file', mediaFile);
+
+        const uploadRes = await fetch(getApiUrl('/api/news/upload'), {
+          method: 'POST',
+          body: formData
+        });
+
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json();
+          mediaUrl = uploadData.imageUrl;
+          isVideo = mediaFile.type.startsWith('video/');
+        } else {
+          console.error('Failed to upload media. Using fallback.');
+        }
       }
 
       const newArticle = {
