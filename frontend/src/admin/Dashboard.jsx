@@ -483,119 +483,223 @@ const Dashboard = () => {
 
         {/* Manage Tab */}
         {activeTab === 'manage' && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-                  <th className="px-6 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Title</th>
-                  <th className="px-6 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Category</th>
-                  <th className="px-6 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Breaking News</th>
-                  <th className="px-6 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Trending Now</th>
-                  <th className="px-6 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Published</th>
-                  <th className="px-6 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {newsItems.map(news => (
-                  <tr key={news.id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white line-clamp-1 max-w-xs">{news.title}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                      <span className="bg-primary/10 text-primary px-2.5 py-1 rounded-full text-xs font-bold">{news.category}</span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                      <button
-                        onClick={async () => {
-                          try {
-                            const response = await fetch(getApiUrl(`/api/news/${news.id}`), {
-                              method: 'PUT',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ isBreaking: !news.isBreaking })
-                            });
-                            if (response.ok) {
-                              dispatch(toggleBreaking(news.id));
-                              showToast('success', `Toggled Breaking status for "${news.title}"`);
-                            } else {
-                              showToast('error', 'Failed to update article status.');
-                            }
-                          } catch (err) {
-                            console.error(err);
-                            showToast('error', 'Network error.');
-                          }
-                        }}
-                        className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
-                          news.isBreaking
-                            ? 'bg-red-600 text-white shadow-sm'
-                            : 'bg-gray-100 hover:bg-gray-200 text-gray-500 dark:bg-gray-800 dark:hover:bg-gray-700'
-                        }`}
-                      >
-                        {news.isBreaking ? 'Breaking ⚡' : 'Set Breaking'}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                      <button
-                        onClick={async () => {
-                          try {
-                            const response = await fetch(getApiUrl(`/api/news/${news.id}`), {
-                              method: 'PUT',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ isTrending: !news.isTrending })
-                            });
-                            if (response.ok) {
-                              dispatch(toggleTrending(news.id));
-                              showToast('success', `Toggled Trending status for "${news.title}"`);
-                            } else {
-                              showToast('error', 'Failed to update article status.');
-                            }
-                          } catch (err) {
-                            console.error(err);
-                            showToast('error', 'Network error.');
-                          }
-                        }}
-                        className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
-                          news.isTrending
-                            ? 'bg-amber-500 text-white shadow-sm'
-                            : 'bg-gray-100 hover:bg-gray-200 text-gray-500 dark:bg-gray-800 dark:hover:bg-gray-700'
-                        }`}
-                      >
-                        {news.isTrending ? 'Trending 🔥' : 'Set Trending'}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{news.uploadTime}</td>
-                    <td className="px-6 py-4 text-sm text-right space-x-3">
-                      <button 
-                        onClick={async () => {
-                          try {
-                            const response = await fetch(getApiUrl(`/api/news/${news.id}`), {
-                              method: 'DELETE'
-                            });
-                            if (response.ok) {
-                              dispatch(deleteNews(news.id));
-                              showToast('success', `Deleted article "${news.title}"`);
-                            } else {
-                              showToast('error', 'Failed to delete article.');
-                            }
-                          } catch (err) {
-                            console.error(err);
-                            showToast('error', 'Network error.');
-                          }
-                        }}
-                        className="text-red-600 hover:underline font-bold text-xs"
-                      >
-                        Delete
-                      </button>
-                    </td>
+          <div className="space-y-4">
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                    <th className="px-6 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Title</th>
+                    <th className="px-6 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Category</th>
+                    <th className="px-6 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Breaking News</th>
+                    <th className="px-6 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Trending Now</th>
+                    <th className="px-6 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Published</th>
+                    <th className="px-6 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300 text-right">Actions</th>
                   </tr>
-                ))}
-                {newsItems.length === 0 && (
-                  <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center text-gray-400 dark:text-gray-500">
-                      <UploadCloud size={40} className="mx-auto mb-3 opacity-40" />
-                      No articles published yet.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {newsItems.map(news => (
+                    <tr key={news.id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white line-clamp-1 max-w-xs">{news.title}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                        <span className="bg-primary/10 text-primary px-2.5 py-1 rounded-full text-xs font-bold">{news.category}</span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                        <button
+                          onClick={async () => {
+                            try {
+                              const response = await fetch(getApiUrl(`/api/news/${news.id}`), {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ isBreaking: !news.isBreaking })
+                              });
+                              if (response.ok) {
+                                dispatch(toggleBreaking(news.id));
+                                showToast('success', `Toggled Breaking status for "${news.title}"`);
+                              } else {
+                                showToast('error', 'Failed to update article status.');
+                              }
+                            } catch (err) {
+                              console.error(err);
+                              showToast('error', 'Network error.');
+                            }
+                          }}
+                          className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                            news.isBreaking
+                              ? 'bg-red-600 text-white shadow-sm'
+                              : 'bg-gray-100 hover:bg-gray-200 text-gray-500 dark:bg-gray-800 dark:hover:bg-gray-700'
+                          }`}
+                        >
+                          {news.isBreaking ? 'Breaking ⚡' : 'Set Breaking'}
+                        </button>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                        <button
+                          onClick={async () => {
+                            try {
+                              const response = await fetch(getApiUrl(`/api/news/${news.id}`), {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ isTrending: !news.isTrending })
+                              });
+                              if (response.ok) {
+                                dispatch(toggleTrending(news.id));
+                                showToast('success', `Toggled Trending status for "${news.title}"`);
+                              } else {
+                                showToast('error', 'Failed to update article status.');
+                              }
+                            } catch (err) {
+                              console.error(err);
+                              showToast('error', 'Network error.');
+                            }
+                          }}
+                          className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                            news.isTrending
+                              ? 'bg-amber-500 text-white shadow-sm'
+                              : 'bg-gray-100 hover:bg-gray-200 text-gray-500 dark:bg-gray-800 dark:hover:bg-gray-700'
+                          }`}
+                        >
+                          {news.isTrending ? 'Trending 🔥' : 'Set Trending'}
+                        </button>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{news.uploadTime}</td>
+                      <td className="px-6 py-4 text-sm text-right space-x-3">
+                        <button 
+                          onClick={async () => {
+                            try {
+                              const response = await fetch(getApiUrl(`/api/news/${news.id}`), {
+                                method: 'DELETE'
+                              });
+                              if (response.ok) {
+                                dispatch(deleteNews(news.id));
+                                showToast('success', `Deleted article "${news.title}"`);
+                              } else {
+                                showToast('error', 'Failed to delete article.');
+                              }
+                            } catch (err) {
+                              console.error(err);
+                              showToast('error', 'Network error.');
+                            }
+                          }}
+                          className="text-red-600 hover:underline font-bold text-xs"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {newsItems.length === 0 && (
+                    <tr>
+                      <td colSpan="6" className="px-6 py-12 text-center text-gray-400 dark:text-gray-500">
+                        <UploadCloud size={40} className="mx-auto mb-3 opacity-40" />
+                        No articles published yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards View */}
+            <div className="grid grid-cols-1 gap-4 md:hidden">
+              {newsItems.map(news => (
+                <div key={news.id} className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 space-y-3">
+                  <div className="flex justify-between items-start gap-2">
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-white leading-snug line-clamp-2 pr-2">{news.title}</h3>
+                    <span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-[10px] font-black uppercase shrink-0">{news.category}</span>
+                  </div>
+                  
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <button
+                      onClick={async () => {
+                        try {
+                          const response = await fetch(getApiUrl(`/api/news/${news.id}`), {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ isBreaking: !news.isBreaking })
+                          });
+                          if (response.ok) {
+                            dispatch(toggleBreaking(news.id));
+                            showToast('success', `Toggled Breaking for "${news.title}"`);
+                          } else {
+                            showToast('error', 'Failed to update article status.');
+                          }
+                        } catch (err) {
+                          console.error(err);
+                          showToast('error', 'Network error.');
+                        }
+                      }}
+                      className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-all ${
+                        news.isBreaking
+                          ? 'bg-red-600 text-white shadow-sm'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-500'
+                      }`}
+                    >
+                      {news.isBreaking ? 'Breaking ⚡' : 'Set Breaking'}
+                    </button>
+                    
+                    <button
+                      onClick={async () => {
+                        try {
+                          const response = await fetch(getApiUrl(`/api/news/${news.id}`), {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ isTrending: !news.isTrending })
+                          });
+                          if (response.ok) {
+                            dispatch(toggleTrending(news.id));
+                            showToast('success', `Toggled Trending for "${news.title}"`);
+                          } else {
+                            showToast('error', 'Failed to update article status.');
+                          }
+                        } catch (err) {
+                          console.error(err);
+                          showToast('error', 'Network error.');
+                        }
+                      }}
+                      className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-all ${
+                        news.isTrending
+                          ? 'bg-amber-500 text-white shadow-sm'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-500'
+                      }`}
+                    >
+                      {news.isTrending ? 'Trending 🔥' : 'Set Trending'}
+                    </button>
+                  </div>
+                  
+                  <div className="flex justify-between items-center pt-2.5 border-t border-gray-100 dark:border-gray-700 text-xs text-gray-400">
+                    <span>{news.uploadTime}</span>
+                    <button
+                      onClick={async () => {
+                        try {
+                          const response = await fetch(getApiUrl(`/api/news/${news.id}`), {
+                            method: 'DELETE'
+                          });
+                          if (response.ok) {
+                            dispatch(deleteNews(news.id));
+                            showToast('success', `Deleted article "${news.title}"`);
+                          } else {
+                            showToast('error', 'Failed to delete article.');
+                          }
+                        } catch (err) {
+                          console.error(err);
+                          showToast('error', 'Network error.');
+                        }
+                      }}
+                      className="text-red-600 hover:underline font-bold text-[11px]"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {newsItems.length === 0 && (
+                <div className="text-center py-12 text-gray-400 dark:text-gray-500 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                  <UploadCloud size={40} className="mx-auto mb-3 opacity-40" />
+                  No articles published yet.
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -611,7 +715,7 @@ const Dashboard = () => {
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                 Write a short breaking headline in English or Tamil. The system will auto-translate it to ensure proper bilingual scrolling on the homepage.
               </p>
-              <form onSubmit={handleAddTickerItem} className="flex gap-4">
+              <form onSubmit={handleAddTickerItem} className="flex flex-col sm:flex-row gap-3">
                 <input
                   type="text"
                   value={tickerInput}
@@ -623,7 +727,7 @@ const Dashboard = () => {
                 <button
                   type="submit"
                   disabled={isTickerTranslating}
-                  className="px-5 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary/95 transition-colors text-sm flex items-center gap-2 shrink-0 disabled:opacity-75 font-bold"
+                  className="px-5 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary/95 transition-colors text-sm flex items-center justify-center gap-2 shrink-0 disabled:opacity-75 font-bold"
                 >
                   {isTickerTranslating ? (
                     <><Loader2 size={16} className="animate-spin" /> Auto Translating...</>
