@@ -61,10 +61,11 @@ const Navbar = () => {
         
         {!isSearchOpen ? (
           <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center">
-            <Link to="/" className="text-3xl md:text-4xl font-extrabold text-primary tracking-tight leading-none">
-              GOOD NEWS
+            <Link to="/" className="text-2xl md:text-3xl font-extrabold text-primary tracking-tight leading-none flex items-center justify-center gap-2 md:gap-2.5">
+              <img src="/logo.png" alt="GOOD NEWS Logo" className="h-9 w-9 md:h-11 md:w-11 object-contain shrink-0" />
+              <span>GOOD NEWS</span>
             </Link>
-            <span className="text-[9px] md:text-[10px] font-bold text-gray-400 dark:text-gray-500 tracking-wider mt-0.5 whitespace-nowrap">
+            <span className="text-[9px] md:text-[10px] font-bold text-gray-400 dark:text-gray-500 tracking-wider mt-1 whitespace-nowrap">
               V. Ramachandaran ({language === 'TA' ? 'ஆசிரியர்' : 'Editor'})
             </span>
           </div>
