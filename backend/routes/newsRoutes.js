@@ -177,8 +177,10 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 
       stream.end(req.file.buffer);
     } else {
-      console.log("Firebase Storage not configured. Falling back to default mock Unsplash cover image.");
-      res.json({ imageUrl: "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&q=80&w=800" });
+      console.log("Firebase Storage not configured. Falling back to Base64 Data URL for local testing.");
+      const base64Data = req.file.buffer.toString('base64');
+      const dataUrl = `data:${req.file.mimetype};base64,${base64Data}`;
+      res.json({ imageUrl: dataUrl });
     }
   } catch (error) {
     console.error("File upload endpoint error:", error);
