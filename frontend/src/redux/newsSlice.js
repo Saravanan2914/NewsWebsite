@@ -22,11 +22,6 @@ const newsSlice = createSlice({
   reducers: {
     setNews: (state, action) => {
       if (action.payload && Array.isArray(action.payload)) {
-        // Fallback: If backend returns empty array (stateless Vercel restart), keep cached localStorage news items
-        if (action.payload.length === 0 && state.items.length > 0) {
-          console.log("Backend empty (stateless restart). Falling back to localStorage news cache.");
-          return;
-        }
         state.items = action.payload.map(item => ({
           ...item,
           id: item._id || item.id
