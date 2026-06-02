@@ -48,7 +48,15 @@ function App() {
         console.error('Error fetching news:', error);
       }
     };
+
     fetchNews();
+
+    // Background sync: poll news every 10 seconds so published/deleted news reflects to all viewers immediately
+    const pollInterval = setInterval(() => {
+      fetchNews();
+    }, 10000);
+
+    return () => clearInterval(pollInterval);
   }, [dispatch]);
 
   return (
