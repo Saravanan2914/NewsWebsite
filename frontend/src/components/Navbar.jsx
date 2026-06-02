@@ -46,7 +46,7 @@ const Navbar = () => {
   return (
     <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 transition-colors duration-200 shadow-sm">
       {/* Top Bar: Date, Login, Logo, Theme/Search */}
-      <div className="container mx-auto px-4 py-2 flex items-center justify-between relative">
+      <div className="container mx-auto px-4 py-4 md:py-5 flex items-center justify-between relative">
         <div className="flex items-center space-x-4">
           <Link to="/admin/login" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
             <UserCircle size={24} />
@@ -60,12 +60,12 @@ const Navbar = () => {
         </div>
         
         {!isSearchOpen ? (
-          <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center">
-            <Link to="/" className="text-2xl md:text-3xl font-extrabold text-primary tracking-tight leading-none flex items-center justify-center gap-2 md:gap-2.5">
-              <img src="/logo.png" alt="GOOD NEWS Logo" className="h-9 w-9 md:h-11 md:w-11 object-contain shrink-0" />
+          <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center z-10">
+            <Link to="/" className="text-xl md:text-3xl font-extrabold text-primary tracking-tight leading-none flex items-center justify-center gap-1.5 md:gap-2.5">
+              <img src="/logo.png" alt="GOOD NEWS Logo" className="h-8 w-8 md:h-10 md:w-10 object-contain shrink-0" />
               <span>GOOD NEWS</span>
             </Link>
-            <span className="text-[9px] md:text-[10px] font-extrabold text-primary dark:text-primary-light bg-primary/10 dark:bg-primary/20 border border-primary/25 px-2.5 py-0.5 rounded-full tracking-wider mt-1.5 whitespace-nowrap shadow-sm">
+            <span className="text-[8px] md:text-[10px] font-extrabold text-primary dark:text-primary-light bg-primary/10 dark:bg-primary/20 border border-primary/25 px-2 py-0.5 md:px-2.5 md:py-0.5 rounded-full tracking-wider mt-1 md:mt-1.5 whitespace-nowrap shadow-sm">
               V. Ramachandaran ({language === 'TA' ? 'ஆசிரியர்' : 'Editor'})
             </span>
           </div>
