@@ -4,6 +4,10 @@ const cors = require('cors');
 const cron = require('node-cron');
 const path = require('path');
 const newsRoutes = require('./routes/newsRoutes');
+const { initDb } = require('./config/db');
+
+// Initialize PostgreSQL database
+initDb();
 
 const app = express();
 
