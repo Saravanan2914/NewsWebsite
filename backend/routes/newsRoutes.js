@@ -135,13 +135,23 @@ router.post('/', async (req, res) => {
   try {
     const { title, description, content, imageUrl, ...rest } = req.body;
     
-    // Auto translate text bilingual system
-    const title_en = await translateText(title, 'en');
-    const title_ta = await translateText(title, 'ta');
-    const description_en = await translateText(description, 'en');
-    const description_ta = await translateText(description, 'ta');
-    const content_en = await translateText(content, 'en');
-    const content_ta = await translateText(content, 'ta');
+    // Auto translate text bilingual system — failures are non-fatal
+    let title_en = title, title_ta = title;
+    let description_en = description, description_ta = description;
+    let content_en = content || '', content_ta = content || '';
+    
+    try {
+      [title_en, title_ta, description_en, description_ta, content_en, content_ta] = await Promise.all([
+        translateText(title, 'en').catch(() => title),
+        translateText(title, 'ta').catch(() => title),
+        translateText(description, 'en').catch(() => description),
+        translateText(description, 'ta').catch(() => description),
+        content ? translateText(content, 'en').catch(() => content) : Promise.resolve(''),
+        content ? translateText(content, 'ta').catch(() => content) : Promise.resolve(''),
+      ]);
+    } catch (translationError) {
+      console.error('Translation batch failed, using original text:', translationError.message);
+    }
 
     const createdAt = new Date();
     const expiresAt = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000); // exactly 24 hours later
