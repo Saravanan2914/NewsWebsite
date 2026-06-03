@@ -3,6 +3,9 @@ const router = express.Router();
 const multer = require('multer');
 const { pool } = require('../config/db');
 
+// In-memory fallback if no database is connected
+let inMemoryNews = [];
+
 // Set up memory storage for multer (files are kept in memory to be converted to Base64)
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -43,7 +46,8 @@ router.get('/inmemory-clear', async (req, res) => {
       await pool.query('TRUNCATE TABLE news');
       res.json({ message: "PostgreSQL database cleared successfully" });
     } else {
-      res.status(400).json({ message: "No database connected." });
+      inMemoryNews = [];
+      res.json({ message: "In-memory fallback cleared successfully" });
     }
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -114,7 +118,11 @@ router.get('/', async (req, res) => {
       
       res.json(list);
     } else {
-      res.json([]); // Return empty if no DB connected
+      let list = [...inMemoryNews];
+      if (category) {
+        list = list.filter(item => item.category === category);
+      }
+      res.json(list);
     }
   } catch (err) {
     console.error("Get news error:", err);
@@ -177,7 +185,16 @@ router.post('/', async (req, res) => {
       console.log(`[PostgreSQL] Saved article: ${savedNews.id}`);
       res.status(201).json(formattedResponse);
     } else {
-      res.status(400).json({ message: "No database connected." });
+      const savedNews = {
+        id: Date.now().toString(),
+        _id: Date.now().toString(),
+        title: title_en, title_ta, description: description_en, description_ta, content: content_en, content_ta, category: rest.category, imageUrl,
+        isBreaking: rest.isBreaking || false, isTrending: rest.isTrending || false, isVideo: rest.isVideo || false, views: rest.views || '0', uploadTime: rest.uploadTime || '', uploadTime_ta: rest.uploadTime_ta || '',
+        createdAt: createdAt.toISOString(), expiresAt: expiresAt.toISOString(), updatedAt: updatedAt.toISOString()
+      };
+      inMemoryNews.unshift(savedNews);
+      console.log(`[In-Memory] Saved article: ${savedNews.id}`);
+      res.status(201).json(savedNews);
     }
   } catch (err) {
     console.error("Create news error:", err);
@@ -198,7 +215,8 @@ router.delete('/:id', async (req, res) => {
         res.status(404).json({ message: 'News article not found.' });
       }
     } else {
-       res.status(400).json({ message: "No database connected." });
+      inMemoryNews = inMemoryNews.filter(item => String(item.id) !== String(id));
+      res.json({ message: 'News article deleted from in-memory successfully.' });
     }
   } catch (err) {
     console.error("Delete news error:", err);
@@ -271,7 +289,12 @@ router.put('/:id', async (req, res) => {
         res.status(404).json({ message: 'News article not found.' });
       }
     } else {
-      res.status(400).json({ message: "No database connected." });
+      const index = inMemoryNews.findIndex(item => String(item.id) === String(id));
+      if (index !== -1) {
+        inMemoryNews[index] = { ...inMemoryNews[index], ...updateData, updatedAt: updatedAt.toISOString() };
+        return res.json(inMemoryNews[index]);
+      }
+      res.status(404).json({ message: 'News article not found in-memory.' });
     }
   } catch (err) {
     console.error("Update news error:", err);
