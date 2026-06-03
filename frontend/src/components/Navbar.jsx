@@ -145,8 +145,8 @@ const Navbar = () => {
           <div className="overflow-hidden whitespace-nowrap flex-grow relative">
             <p className="inline-block animate-[marquee_20s_linear_infinite] dark:text-gray-300">
               {breakingNewsItems.map((item, idx) => (
-                <span key={item.id || idx} className="inline-flex items-center gap-1.5 mr-10 font-medium">
-                  🚨 {language === 'TA' && item.text_ta ? item.text_ta : item.text}
+                <span key={item?.id || idx} className="inline-flex items-center gap-1.5 mr-10 font-medium">
+                  🚨 {language === 'TA' && item?.text_ta ? item.text_ta : (item?.text || (typeof item === 'string' ? item : ''))}
                 </span>
               ))}
               {breakingNewsItems.length === 0 && (

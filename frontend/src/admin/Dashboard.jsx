@@ -816,11 +816,11 @@ const Dashboard = () => {
                         <div className="flex-1 space-y-1">
                           <div className="flex items-center gap-2">
                             <span className="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded font-bold uppercase">EN</span>
-                            <p className="text-gray-900 dark:text-white text-sm font-medium">{item.text}</p>
+                            <p className="text-gray-900 dark:text-white text-sm font-medium">{item?.text || (typeof item === 'string' ? item : '')}</p>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-xs bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 px-2 py-0.5 rounded font-bold uppercase">TA</span>
-                            <p className="text-gray-900 dark:text-white text-sm font-medium">{item.text_ta || '(No Translation)'}</p>
+                            <p className="text-gray-900 dark:text-white text-sm font-medium">{item?.text_ta || (typeof item === 'string' ? '' : '(No Translation)')}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
