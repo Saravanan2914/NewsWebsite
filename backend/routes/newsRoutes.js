@@ -312,4 +312,100 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+// Serve image binary from PostgreSQL or redirect to URL
+router.get('/image/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    let img = null;
+    
+    if (process.env.DATABASE_URL) {
+      const result = await pool.query('SELECT image_data FROM news WHERE id = $1', [id]);
+      if (result.rowCount > 0 && result.rows[0].image_data) {
+        img = result.rows[0].image_data;
+      }
+    } else {
+      const article = inMemoryNews.find(item => String(item.id) === String(id));
+      if (article) {
+        img = article.imageUrl || article.image_data;
+      }
+    }
+
+    if (img) {
+      if (img.startsWith('http')) {
+        return res.redirect(img);
+      }
+      
+      const matches = img.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
+      if (matches) {
+        const contentType = matches[1];
+        const buffer = Buffer.from(matches[2], 'base64');
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        return res.send(buffer);
+      }
+    }
+    res.status(404).send('Image not found');
+  } catch (err) {
+    console.error("Get image binary error:", err);
+    res.status(500).send('Internal server error');
+  }
+});
+
+// Dynamic SEO and Open Graph sharing handler
+router.get('/share/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    
+    // Fetch article details
+    let article = null;
+    if (process.env.DATABASE_URL) {
+      const result = await pool.query('SELECT title, description FROM news WHERE id = $1', [id]);
+      if (result.rowCount > 0) {
+        article = result.rows[0];
+      }
+    } else {
+      article = inMemoryNews.find(item => String(item.id) === String(id));
+    }
+    
+    const title = article ? article.title : 'GOOD NEWS Network';
+    const description = article ? article.description : 'Bilingual News Portal';
+    
+    const protocol = req.headers['x-forwarded-proto'] || 'http';
+    const host = req.headers.host;
+    
+    // OG Image URL points to the backend /image/:id endpoint
+    const imageUrl = article ? `${protocol}://${host}/_/backend/api/news/image/${id}` : `${protocol}://${host}/logo.png`;
+    const shareUrl = `${protocol}://${host}/news/${id}`;
+
+    // Fetch static index.html template from frontend
+    const indexUrl = `${protocol}://${host}/index.html`;
+    const indexRes = await fetch(indexUrl);
+    let html = await indexRes.text();
+    
+    // Inject custom meta tags
+    html = html.replace(/<title>[^]*?<\/title>/gi, `<title>${title}</title>`);
+    
+    const ogTags = `
+  <title>${title}</title>
+  <meta property="og:title" content="${title.replace(/"/g, '&quot;')}" />
+  <meta property="og:description" content="${description.replace(/"/g, '&quot;')}" />
+  <meta property="og:image" content="${imageUrl}" />
+  <meta property="og:url" content="${shareUrl}" />
+  <meta property="og:type" content="article" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${title.replace(/"/g, '&quot;')}" />
+  <meta name="twitter:description" content="${description.replace(/"/g, '&quot;')}" />
+  <meta name="twitter:image" content="${imageUrl}" />
+`;
+    
+    html = html.replace('<head>', `<head>${ogTags}`);
+    
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  } catch (err) {
+    console.error('Share endpoint error:', err);
+    res.status(500).send('Internal server error');
+  }
+});
+
 module.exports = router;
