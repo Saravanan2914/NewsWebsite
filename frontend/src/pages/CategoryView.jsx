@@ -10,7 +10,7 @@ const CategoryView = () => {
   
   // Robust match handles dashes and spaces in category names
   const categoryNews = newsItems.filter(news => 
-    news.category.toLowerCase().replace(' ', '-') === category.toLowerCase()
+    news.category && news.category.toLowerCase().replace(' ', '-') === category.toLowerCase()
   );
   
   const { t } = useLanguage();

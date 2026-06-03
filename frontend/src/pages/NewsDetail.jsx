@@ -24,9 +24,9 @@ const NewsDetail = () => {
       <article className="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
         <span className="bg-primary text-white text-sm font-bold px-3 py-1 rounded shadow mb-4 inline-block">
           {language === 'TA' ? (() => {
-            const key = news.category.split(' ').map((w, i) => i === 0 ? w.toLowerCase() : w).join('');
-            return t(key) || news.category;
-          })() : news.category}
+            const key = news.category ? news.category.split(' ').map((w, i) => i === 0 ? w.toLowerCase() : w).join('') : 'general';
+            return t(key) || news.category || '';
+          })() : news.category || ''}
         </span>
         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4 leading-tight">
           {displayTitle}

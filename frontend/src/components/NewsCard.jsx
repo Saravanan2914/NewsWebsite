@@ -3,11 +3,14 @@ import { PlayCircle, Eye, Share2, Clock } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const NewsCard = ({ news, variant = 'medium' }) => {
+  if (!news) return null;
   const isLarge = variant === 'large';
   const isSmall = variant === 'small';
   const { t, language } = useLanguage();
 
-  const categoryKey = news.category.split(' ').map((word, index) => index === 0 ? word.toLowerCase() : word).join('');
+  const categoryKey = news.category
+    ? news.category.split(' ').map((word, index) => index === 0 ? word.toLowerCase() : word).join('')
+    : 'general';
   const displayTitle = language === 'TA' && news.title_ta ? news.title_ta : news.title;
   const displayDescription = language === 'TA' && news.description_ta ? news.description_ta : news.description;
   const displayUploadTime = language === 'TA' && news.uploadTime_ta ? news.uploadTime_ta : news.uploadTime;

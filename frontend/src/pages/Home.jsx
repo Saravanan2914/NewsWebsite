@@ -70,7 +70,8 @@ const HeroCarousel = ({ slides, language, t }) => {
   }, [active, animating]);
 
   if (!slides.length) return null;
-  const slide = slides[active];
+  const slide = slides[active] || slides[0];
+  if (!slide) return null;
   const title = language === 'TA' && slide.title_ta ? slide.title_ta : slide.title;
   const desc  = language === 'TA' && slide.description_ta ? slide.description_ta : slide.description;
 

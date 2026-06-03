@@ -1,11 +1,19 @@
 const { Pool } = require('pg');
 
-// Use DATABASE_URL from .env or fallback to a dummy connection string during development if not provided
+// Use DATABASE_URL from .env or fallback
+let connectionString = process.env.DATABASE_URL;
+if (connectionString && connectionString.includes('?')) {
+  // Remove query parameters like sslmode=require that override custom ssl configurations in node-postgres
+  connectionString = connectionString.split('?')[0];
+}
+
+const isLocalhost = connectionString && (
+  connectionString.includes('localhost') || connectionString.includes('127.0.0.1')
+);
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('localhost') ? false : {
-    rejectUnauthorized: false
-  }
+  connectionString: connectionString,
+  ssl: isLocalhost ? false : { rejectUnauthorized: false }
 });
 
 pool.on('error', (err) => {
@@ -38,9 +46,9 @@ async function initDb() {
       views VARCHAR(50) DEFAULT '0',
       upload_time VARCHAR(100),
       upload_time_ta VARCHAR(100),
-      created_at TIMESTAMP,
-      expires_at TIMESTAMP,
-      updated_at TIMESTAMP
+      created_at TIMESTAMPTZ,
+      expires_at TIMESTAMPTZ,
+      updated_at TIMESTAMPTZ
     );
   `;
   try {
