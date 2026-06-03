@@ -14,6 +14,16 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Internal rewrite middleware to support dynamic SEO routing on Vercel
+app.use((req, res, next) => {
+  if (req.path.startsWith('/news/')) {
+    const id = req.path.split('/')[2];
+    req.url = `/api/news/share/${id}`;
+  }
+  next();
+});
+
 const uploadDir = process.env.VERCEL 
   ? path.join('/tmp', 'uploads')
   : path.join(__dirname, 'uploads');

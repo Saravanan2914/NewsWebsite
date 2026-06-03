@@ -10,5 +10,8 @@
       "routePrefix": "/_/backend",
       "framework": "express"
     }
-  }
+  },
+  "rewrites": [
+    { "source": "/news/:id", "destination": "/_/backend/api/news/share/:id" }
+  ]
 }
