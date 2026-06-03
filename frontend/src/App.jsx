@@ -1,7 +1,6 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
-import { setNews } from './redux/newsSlice';
+import { setNews, updateBreakingNews } from './redux/newsSlice';
 import { getApiUrl } from './utils/config';
 import MainLayout from './layouts/MainLayout';
 import Home from './pages/Home';
@@ -49,11 +48,27 @@ function App() {
       }
     };
 
-    fetchNews();
+    const fetchTicker = async () => {
+      try {
+        const response = await fetch(getApiUrl('/api/news/ticker'));
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data)) {
+            dispatch(updateBreakingNews(data));
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching ticker items:', error);
+      }
+    };
 
-    // Background sync: poll news every 10 seconds so published/deleted news reflects to all viewers immediately
+    fetchNews();
+    fetchTicker();
+
+    // Background sync: poll news & ticker every 10 seconds so published/deleted news reflects to all viewers immediately
     const pollInterval = setInterval(() => {
       fetchNews();
+      fetchTicker();
     }, 10000);
 
     return () => clearInterval(pollInterval);
