@@ -22,20 +22,36 @@ const newsSlice = createSlice({
   reducers: {
     setNews: (state, action) => {
       let payloadItems = [];
+      let isPersistent = false;
 
       if (action.payload && Array.isArray(action.payload)) {
         payloadItems = action.payload;
       } else if (action.payload && typeof action.payload === 'object' && Array.isArray(action.payload.items)) {
         payloadItems = action.payload.items;
+        isPersistent = action.payload.isPersistent || false;
       } else {
         console.warn("setNews: payload is not formatted correctly", action.payload);
         return;
       }
 
-      state.items = payloadItems.map(item => ({
+      const formattedItems = payloadItems.map(item => ({
         ...item,
         id: item._id || item.id
       }));
+
+      // If database is persistent (PostgreSQL connected), trust the server as source of truth
+      if (isPersistent) {
+        state.items = formattedItems;
+      } else {
+        // No persistent database: merge server items with local items
+        // Keep locally-added items that aren't on the server yet
+        if (formattedItems.length > 0) {
+          const serverIds = new Set(formattedItems.map(item => String(item.id)));
+          const localOnly = state.items.filter(item => !serverIds.has(String(item.id)));
+          state.items = [...formattedItems, ...localOnly];
+        }
+        // If server returned empty and we have local items, keep local items (don't wipe)
+      }
       localStorage.setItem('newsItems', JSON.stringify(state.items));
     },
     addNews: (state, action) => {
