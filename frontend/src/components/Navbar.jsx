@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Moon, Sun, Menu, UserCircle, X, Home } from 'lucide-react';
+import { Search, Moon, Sun, Menu, UserCircle, X } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useDispatch, useSelector } from 'react-redux';
 import { setSearchQuery as setGlobalSearch } from '../redux/newsSlice';
@@ -48,10 +48,7 @@ const Navbar = () => {
       {/* Top Bar: Date, Login, Logo, Theme/Search */}
       <div className="container mx-auto px-4 py-4 md:py-5 flex items-center justify-between relative">
         <div className="flex items-center space-x-4">
-          <Link to="/" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors" title="Home">
-            <Home size={22} />
-          </Link>
-          <Link to="/admin/login" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors" title="Admin Login">
+          <Link to="/admin/login" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
             <UserCircle size={24} />
           </Link>
           <div className="hidden md:flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 font-medium">
@@ -145,8 +142,8 @@ const Navbar = () => {
           <div className="overflow-hidden whitespace-nowrap flex-grow relative">
             <p className="inline-block animate-[marquee_20s_linear_infinite] dark:text-gray-300">
               {breakingNewsItems.map((item, idx) => (
-                <span key={item?.id || idx} className="inline-flex items-center gap-1.5 mr-10 font-medium">
-                  🚨 {language === 'TA' && item?.text_ta ? item.text_ta : (item?.text || (typeof item === 'string' ? item : ''))}
+                <span key={item.id || idx} className="inline-flex items-center gap-1.5 mr-10 font-medium">
+                  🚨 {language === 'TA' && item.text_ta ? item.text_ta : item.text}
                 </span>
               ))}
               {breakingNewsItems.length === 0 && (

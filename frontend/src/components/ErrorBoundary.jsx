@@ -13,12 +13,6 @@ class ErrorBoundary extends Component {
 
   componentDidCatch(error, errorInfo) {
     console.error('ErrorBoundary caught:', error, errorInfo);
-    try {
-      localStorage.clear();
-      console.log('LocalStorage cleared by ErrorBoundary to resolve state corruption.');
-    } catch (e) {
-      console.error('Failed to clear LocalStorage in ErrorBoundary:', e);
-    }
   }
 
   render() {
@@ -35,12 +29,7 @@ class ErrorBoundary extends Component {
             </p>
             <Link
               to="/"
-              onClick={() => {
-                try {
-                  localStorage.clear();
-                } catch (e) {}
-                this.setState({ hasError: false, error: null });
-              }}
+              onClick={() => this.setState({ hasError: false, error: null })}
               className="inline-block px-6 py-2.5 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-colors shadow-md"
             >
               ← Go to Homepage

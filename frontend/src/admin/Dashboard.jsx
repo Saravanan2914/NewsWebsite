@@ -140,22 +140,26 @@ const Dashboard = () => {
     if (!tickerInput.trim()) return showToast('error', 'Ticker text is required.');
     setIsTickerTranslating(true);
     try {
-      const response = await fetch(getApiUrl('/api/news/ticker'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: tickerInput })
-      });
-      if (response.ok) {
-        const savedItem = await response.json();
-        dispatch(addBreakingNewsItem(savedItem));
-        setTickerInput('');
-        showToast('success', 'Added breaking news ticker item!');
-      } else {
-        showToast('error', 'Failed to add ticker item.');
-      }
+      const textEn = await translateText(tickerInput, 'en');
+      const textTa = await translateText(tickerInput, 'ta');
+      const newItem = {
+        id: Date.now().toString(),
+        text: textEn,
+        text_ta: textTa
+      };
+      dispatch(addBreakingNewsItem(newItem));
+      setTickerInput('');
+      showToast('success', 'Added breaking news ticker item!');
     } catch (err) {
       console.error(err);
-      showToast('error', 'Failed to save ticker item.');
+      showToast('error', 'Translation failed. Using fallback.');
+      const newItem = {
+        id: Date.now().toString(),
+        text: tickerInput,
+        text_ta: tickerInput
+      };
+      dispatch(addBreakingNewsItem(newItem));
+      setTickerInput('');
     } finally {
       setIsTickerTranslating(false);
     }
@@ -182,25 +186,15 @@ const Dashboard = () => {
         ? editingTickerTextTa 
         : await translateText(editingTickerText, 'ta');
       
-      const response = await fetch(getApiUrl(`/api/news/ticker/${id}`), {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: textEn, text_ta: textTa })
+      const updatedList = breakingNewsItems.map(item => {
+        if (String(item.id) === String(id)) {
+          return { ...item, text: textEn, text_ta: textTa };
+        }
+        return item;
       });
-      if (response.ok) {
-        const updatedItem = await response.json();
-        const updatedList = breakingNewsItems.map(item => {
-          if (String(item.id) === String(id)) {
-            return updatedItem;
-          }
-          return item;
-        });
-        dispatch(updateBreakingNews(updatedList));
-        handleCancelEditTicker();
-        showToast('success', 'Updated ticker item!');
-      } else {
-        showToast('error', 'Failed to update ticker item.');
-      }
+      dispatch(updateBreakingNews(updatedList));
+      handleCancelEditTicker();
+      showToast('success', 'Updated ticker item!');
     } catch (err) {
       console.error(err);
       showToast('error', 'Failed to save edits.');
@@ -209,21 +203,9 @@ const Dashboard = () => {
     }
   };
 
-  const handleDeleteTicker = async (id) => {
-    try {
-      const response = await fetch(getApiUrl(`/api/news/ticker/${id}`), {
-        method: 'DELETE'
-      });
-      if (response.ok) {
-        dispatch(deleteBreakingNewsItem(id));
-        showToast('success', 'Deleted ticker item!');
-      } else {
-        showToast('error', 'Failed to delete ticker item.');
-      }
-    } catch (err) {
-      console.error(err);
-      showToast('error', 'Failed to delete ticker item.');
-    }
+  const handleDeleteTicker = (id) => {
+    dispatch(deleteBreakingNewsItem(id));
+    showToast('success', 'Deleted ticker item!');
   };
 
   const validate = () => {
@@ -816,11 +798,11 @@ const Dashboard = () => {
                         <div className="flex-1 space-y-1">
                           <div className="flex items-center gap-2">
                             <span className="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded font-bold uppercase">EN</span>
-                            <p className="text-gray-900 dark:text-white text-sm font-medium">{item?.text || (typeof item === 'string' ? item : '')}</p>
+                            <p className="text-gray-900 dark:text-white text-sm font-medium">{item.text}</p>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-xs bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 px-2 py-0.5 rounded font-bold uppercase">TA</span>
-                            <p className="text-gray-900 dark:text-white text-sm font-medium">{item?.text_ta || (typeof item === 'string' ? '' : '(No Translation)')}</p>
+                            <p className="text-gray-900 dark:text-white text-sm font-medium">{item.text_ta || '(No Translation)'}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
