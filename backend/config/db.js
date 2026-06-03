@@ -32,6 +32,12 @@ async function initDb() {
       image_data TEXT,
       image_mimetype VARCHAR(50),
       category VARCHAR(100),
+      is_breaking BOOLEAN DEFAULT FALSE,
+      is_trending BOOLEAN DEFAULT FALSE,
+      is_video BOOLEAN DEFAULT FALSE,
+      views VARCHAR(50) DEFAULT '0',
+      upload_time VARCHAR(100),
+      upload_time_ta VARCHAR(100),
       created_at TIMESTAMP,
       expires_at TIMESTAMP,
       updated_at TIMESTAMP

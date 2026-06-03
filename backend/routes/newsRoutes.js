@@ -93,7 +93,7 @@ router.get('/', async (req, res) => {
     res.setHeader('Access-Control-Expose-Headers', 'X-Database-Persistent');
 
     if (process.env.DATABASE_URL) {
-      let query = 'SELECT id, title, title_ta, description, description_ta, content, content_ta, category, image_data as "imageUrl", created_at as "createdAt", expires_at as "expiresAt", updated_at as "updatedAt" FROM news';
+      let query = 'SELECT id, title, title_ta, description, description_ta, content, content_ta, category, image_data as "imageUrl", is_breaking as "isBreaking", is_trending as "isTrending", is_video as "isVideo", views, upload_time as "uploadTime", upload_time_ta as "uploadTime_ta", created_at as "createdAt", expires_at as "expiresAt", updated_at as "updatedAt" FROM news';
       const values = [];
       
       if (category) {
@@ -142,13 +142,17 @@ router.post('/', async (req, res) => {
     if (process.env.DATABASE_URL) {
       const insertQuery = `
         INSERT INTO news (
-          title, title_ta, description, description_ta, content, content_ta, category, image_data, created_at, expires_at, updated_at
+          title, title_ta, description, description_ta, content, content_ta, category, image_data, 
+          is_breaking, is_trending, is_video, views, upload_time, upload_time_ta,
+          created_at, expires_at, updated_at
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
         ) RETURNING *;
       `;
       const values = [
-        title_en, title_ta, description_en, description_ta, content_en, content_ta, rest.category, imageUrl, createdAt, expiresAt, updatedAt
+        title_en, title_ta, description_en, description_ta, content_en, content_ta, rest.category, imageUrl,
+        rest.isBreaking || false, rest.isTrending || false, rest.isVideo || false, rest.views || '0', rest.uploadTime || '', rest.uploadTime_ta || '',
+        createdAt, expiresAt, updatedAt
       ];
       
       const result = await pool.query(insertQuery, values);
@@ -157,6 +161,12 @@ router.post('/', async (req, res) => {
       const formattedResponse = {
         ...savedNews,
         imageUrl: savedNews.image_data,
+        isBreaking: savedNews.is_breaking,
+        isTrending: savedNews.is_trending,
+        isVideo: savedNews.is_video,
+        views: savedNews.views,
+        uploadTime: savedNews.upload_time,
+        uploadTime_ta: savedNews.upload_time_ta,
         createdAt: savedNews.created_at,
         expiresAt: savedNews.expires_at,
         updatedAt: savedNews.updated_at,
@@ -214,6 +224,11 @@ router.put('/:id', async (req, res) => {
         
         let dbKey = key;
         if (key === 'imageUrl') dbKey = 'image_data';
+        if (key === 'isBreaking') dbKey = 'is_breaking';
+        if (key === 'isTrending') dbKey = 'is_trending';
+        if (key === 'isVideo') dbKey = 'is_video';
+        if (key === 'uploadTime') dbKey = 'upload_time';
+        if (key === 'uploadTime_ta') dbKey = 'upload_time_ta';
         
         setKeys.push(`${dbKey} = $${paramIndex}`);
         values.push(value);
@@ -239,6 +254,12 @@ router.put('/:id', async (req, res) => {
         const formattedResponse = {
           ...updatedDoc,
           imageUrl: updatedDoc.image_data,
+          isBreaking: updatedDoc.is_breaking,
+          isTrending: updatedDoc.is_trending,
+          isVideo: updatedDoc.is_video,
+          views: updatedDoc.views,
+          uploadTime: updatedDoc.upload_time,
+          uploadTime_ta: updatedDoc.upload_time_ta,
           createdAt: updatedDoc.created_at,
           expiresAt: updatedDoc.expires_at,
           updatedAt: updatedDoc.updated_at,
