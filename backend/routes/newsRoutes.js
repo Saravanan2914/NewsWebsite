@@ -408,4 +408,107 @@ router.get('/share/:id', async (req, res) => {
   }
 });
 
+// GET ticker items
+router.get('/ticker', async (req, res) => {
+  try {
+    if (process.env.DATABASE_URL) {
+      const result = await pool.query('SELECT id, text, text_ta FROM ticker ORDER BY created_at ASC');
+      // Format id as string for frontend
+      const list = result.rows.map(row => ({
+        ...row,
+        id: row.id.toString()
+      }));
+      res.json(list);
+    } else {
+      res.json([]);
+    }
+  } catch (err) {
+    console.error("Get ticker error:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// POST ticker item
+router.post('/ticker', async (req, res) => {
+  try {
+    const { text, text_ta } = req.body;
+    
+    // Auto translate if not provided
+    let textEn = text || '';
+    let textTa = text_ta || '';
+    
+    if (textEn && !textTa) {
+      textTa = await translateText(textEn, 'ta').catch(() => textEn);
+    } else if (textTa && !textEn) {
+      textEn = await translateText(textTa, 'en').catch(() => textTa);
+    }
+
+    if (process.env.DATABASE_URL) {
+      const query = 'INSERT INTO ticker (text, text_ta) VALUES ($1, $2) RETURNING id, text, text_ta';
+      const result = await pool.query(query, [textEn, textTa]);
+      const savedItem = result.rows[0];
+      res.status(201).json({
+        ...savedItem,
+        id: savedItem.id.toString()
+      });
+    } else {
+      res.status(201).json({
+        id: Date.now().toString(),
+        text: textEn,
+        text_ta: textTa
+      });
+    }
+  } catch (err) {
+    console.error("Create ticker error:", err);
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// PUT ticker item
+router.put('/ticker/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { text, text_ta } = req.body;
+    if (process.env.DATABASE_URL) {
+      const query = 'UPDATE ticker SET text = $1, text_ta = $2 WHERE id = $3 RETURNING id, text, text_ta';
+      const result = await pool.query(query, [text, text_ta, id]);
+      if (result.rowCount > 0) {
+        const updatedItem = result.rows[0];
+        res.json({
+          ...updatedItem,
+          id: updatedItem.id.toString()
+        });
+      } else {
+        res.status(404).json({ message: 'Ticker item not found.' });
+      }
+    } else {
+      res.json({ id, text, text_ta });
+    }
+  } catch (err) {
+    console.error("Update ticker error:", err);
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// DELETE ticker item
+router.delete('/ticker/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    if (process.env.DATABASE_URL) {
+      const query = 'DELETE FROM ticker WHERE id = $1 RETURNING id';
+      const result = await pool.query(query, [id]);
+      if (result.rowCount > 0) {
+        res.json({ message: 'Ticker item deleted successfully.' });
+      } else {
+        res.status(404).json({ message: 'Ticker item not found.' });
+      }
+    } else {
+      res.json({ message: 'Ticker item deleted from memory successfully.' });
+    }
+  } catch (err) {
+    console.error("Delete ticker error:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;

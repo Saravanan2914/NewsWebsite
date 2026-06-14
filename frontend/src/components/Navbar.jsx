@@ -21,6 +21,16 @@ const Navbar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const breakingNewsItems = useSelector(state => state.news.breakingNews || []);
+  const newsArticles = useSelector(state => state.news.items || []);
+
+  const breakingArticles = newsArticles.filter(article => article.isBreaking);
+  const mappedBreakingArticles = breakingArticles.map(article => ({
+    id: `article-${article.id}`,
+    text: article.title || '',
+    text_ta: article.title_ta || article.title || ''
+  }));
+
+  const combinedTickerItems = [...breakingNewsItems, ...mappedBreakingArticles];
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -144,12 +154,12 @@ const Navbar = () => {
           </span>
           <div className="overflow-hidden whitespace-nowrap flex-grow relative">
             <p className="inline-block animate-[marquee_20s_linear_infinite] dark:text-gray-300">
-              {breakingNewsItems.map((item, idx) => (
+              {combinedTickerItems.map((item, idx) => (
                 <span key={item.id || idx} className="inline-flex items-center gap-1.5 mr-10 font-medium">
                   🚨 {language === 'TA' && item.text_ta ? item.text_ta : item.text}
                 </span>
               ))}
-              {breakingNewsItems.length === 0 && (
+              {combinedTickerItems.length === 0 && (
                 <span className="text-gray-400 font-medium">No breaking news at this moment.</span>
               )}
             </p>

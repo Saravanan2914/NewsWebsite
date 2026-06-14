@@ -139,27 +139,33 @@ const Dashboard = () => {
     e.preventDefault();
     if (!tickerInput.trim()) return showToast('error', 'Ticker text is required.');
     setIsTickerTranslating(true);
+    let textEn = tickerInput;
+    let textTa = tickerInput;
     try {
-      const textEn = await translateText(tickerInput, 'en');
-      const textTa = await translateText(tickerInput, 'ta');
-      const newItem = {
-        id: Date.now().toString(),
-        text: textEn,
-        text_ta: textTa
-      };
-      dispatch(addBreakingNewsItem(newItem));
-      setTickerInput('');
-      showToast('success', 'Added breaking news ticker item!');
+      textEn = await translateText(tickerInput, 'en').catch(() => tickerInput);
+      textTa = await translateText(tickerInput, 'ta').catch(() => tickerInput);
+    } catch (err) {
+      console.error("Translation error:", err);
+    }
+
+    try {
+      const response = await fetch(getApiUrl('/api/news/ticker'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: textEn, text_ta: textTa })
+      });
+      
+      if (response.ok) {
+        const savedItem = await response.json();
+        dispatch(addBreakingNewsItem(savedItem));
+        setTickerInput('');
+        showToast('success', 'Added breaking news ticker item!');
+      } else {
+        showToast('error', 'Failed to add ticker item.');
+      }
     } catch (err) {
       console.error(err);
-      showToast('error', 'Translation failed. Using fallback.');
-      const newItem = {
-        id: Date.now().toString(),
-        text: tickerInput,
-        text_ta: tickerInput
-      };
-      dispatch(addBreakingNewsItem(newItem));
-      setTickerInput('');
+      showToast('error', 'Failed to add ticker item.');
     } finally {
       setIsTickerTranslating(false);
     }
@@ -181,20 +187,31 @@ const Dashboard = () => {
     if (!editingTickerText.trim()) return showToast('error', 'Text cannot be empty.');
     setIsTickerTranslating(true);
     try {
-      const textEn = await translateText(editingTickerText, 'en');
+      const textEn = await translateText(editingTickerText, 'en').catch(() => editingTickerText);
       const textTa = editingTickerTextTa.trim() 
         ? editingTickerTextTa 
-        : await translateText(editingTickerText, 'ta');
+        : await translateText(editingTickerText, 'ta').catch(() => editingTickerText);
       
-      const updatedList = breakingNewsItems.map(item => {
-        if (String(item.id) === String(id)) {
-          return { ...item, text: textEn, text_ta: textTa };
-        }
-        return item;
+      const response = await fetch(getApiUrl(`/api/news/ticker/${id}`), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: textEn, text_ta: textTa })
       });
-      dispatch(updateBreakingNews(updatedList));
-      handleCancelEditTicker();
-      showToast('success', 'Updated ticker item!');
+
+      if (response.ok) {
+        const updatedItem = await response.json();
+        const updatedList = breakingNewsItems.map(item => {
+          if (String(item.id) === String(id)) {
+            return updatedItem;
+          }
+          return item;
+        });
+        dispatch(updateBreakingNews(updatedList));
+        handleCancelEditTicker();
+        showToast('success', 'Updated ticker item!');
+      } else {
+        showToast('error', 'Failed to update ticker item.');
+      }
     } catch (err) {
       console.error(err);
       showToast('error', 'Failed to save edits.');
@@ -203,9 +220,21 @@ const Dashboard = () => {
     }
   };
 
-  const handleDeleteTicker = (id) => {
-    dispatch(deleteBreakingNewsItem(id));
-    showToast('success', 'Deleted ticker item!');
+  const handleDeleteTicker = async (id) => {
+    try {
+      const response = await fetch(getApiUrl(`/api/news/ticker/${id}`), {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        dispatch(deleteBreakingNewsItem(id));
+        showToast('success', 'Deleted ticker item!');
+      } else {
+        showToast('error', 'Failed to delete ticker item.');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('error', 'Failed to delete ticker item.');
+    }
   };
 
   const validate = () => {

@@ -12,6 +12,7 @@
     }
   },
   "rewrites": [
-    { "source": "/news/:id", "destination": "/_/backend/api/news/share/:id" }
+    { "source": "/news/:id", "destination": "/_/backend/api/news/share/:id" },
+    { "source": "/category/:category", "destination": "/_/backend/api/news/share-category/:category" }
   ]
 }

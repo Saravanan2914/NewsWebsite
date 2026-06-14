@@ -50,6 +50,12 @@ async function initDb() {
       expires_at TIMESTAMPTZ,
       updated_at TIMESTAMPTZ
     );
+    CREATE TABLE IF NOT EXISTS ticker (
+      id SERIAL PRIMARY KEY,
+      text TEXT,
+      text_ta TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
   `;
   try {
     await pool.query(createTableQuery);

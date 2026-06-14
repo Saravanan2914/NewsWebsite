@@ -2,17 +2,37 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const defaultNews = [];
 const persistedNews = localStorage.getItem('newsItems');
-const initialNews = persistedNews ? JSON.parse(persistedNews) : defaultNews;
+let initialNews = defaultNews;
+try {
+  if (persistedNews) {
+    const parsed = JSON.parse(persistedNews);
+    if (Array.isArray(parsed)) {
+      initialNews = parsed;
+    }
+  }
+} catch (e) {
+  console.error("Failed to parse newsItems from localStorage:", e);
+}
 
 const defaultBreakingNews = [];
 const persistedBreakingNews = localStorage.getItem('breakingNews');
-const initialBreakingNews = persistedBreakingNews ? JSON.parse(persistedBreakingNews) : defaultBreakingNews;
+let initialBreakingNews = defaultBreakingNews;
+try {
+  if (persistedBreakingNews) {
+    const parsed = JSON.parse(persistedBreakingNews);
+    if (Array.isArray(parsed)) {
+      initialBreakingNews = parsed;
+    }
+  }
+} catch (e) {
+  console.error("Failed to parse breakingNews from localStorage:", e);
+}
 
 const initialState = {
   items: initialNews,
   breakingNews: initialBreakingNews,
   searchQuery: '',
-  status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+  status: 'idle',
   error: null
 };
 
